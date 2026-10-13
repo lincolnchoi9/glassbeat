@@ -91,8 +91,7 @@ final class Overlay: NSObject {
         resize(300 * prefs.scale, logicalHeight * prefs.scale)
         panel.orderFrontRegardless()
 
-        statusItem.button?.image = NSImage(systemSymbolName: "music.note", accessibilityDescription: "PrismPlay")
-        statusItem.button?.image?.isTemplate = true
+        statusItem.button?.image = Self.menuBarGlyph
         let menu = NSMenu()
         for item in [gameItem, NSMenuItem(title: "Show overlay", action: #selector(showOverlay), keyEquivalent: ""),
                      NSMenuItem(title: "Settings", action: #selector(openSettings), keyEquivalent: ""), NSMenuItem.separator(),
@@ -118,6 +117,20 @@ final class Overlay: NSObject {
             spotify.start()
         }
     }
+
+    /// The prism play triangle as a monochrome template (Apple's menu bar convention), drawn at 18 pt.
+    private static let menuBarGlyph: NSImage = {
+        let image = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { _ in
+            let prism = NSBezierPath()
+            prism.move(to: NSPoint(x: 4.5, y: 15)); prism.line(to: NSPoint(x: 15.5, y: 9)); prism.line(to: NSPoint(x: 4.5, y: 3)); prism.close()
+            prism.lineWidth = 2.4; prism.lineJoinStyle = .round
+            NSColor.black.setStroke(); prism.stroke()
+            return true
+        }
+        image.isTemplate = true
+        image.accessibilityDescription = "PrismPlay"
+        return image
+    }()
 
     // MARK: Bridge
 

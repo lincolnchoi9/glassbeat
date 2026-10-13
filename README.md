@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/icon.png" width="128" alt="PrismPlay icon"></p>
+
 # PrismPlay
 
 A small glass Spotify overlay for Windows 11. Drag the header to place it, hover to reveal controls, and press **Ctrl+Alt+G** to toggle click-through game mode. Works with the Spotify desktop app on the same computer; no Spotify login is needed.

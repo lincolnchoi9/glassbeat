@@ -27,6 +27,7 @@ public sealed class NativeWindow : IOverlayInteraction
     private readonly SubclassProc callback;
     private readonly bool preview;
     private NOTIFYICONDATA tray;
+    private readonly nint trayIcon;
     private bool hotkeyRegistered, activatable;
     private readonly uint taskbarCreated = RegisterWindowMessage("TaskbarCreated");
     private double logicalWidth = 300, logicalHeight = 100;
@@ -76,8 +77,11 @@ public sealed class NativeWindow : IOverlayInteraction
         window.AppWindow.Move(new PointInt32(preferences.X, preferences.Y));
         callback = WndProc;
         SetWindowSubclass(hwnd, callback, 1, 0);
-        // ponytail: generic IDI_APPLICATION icon; the project has no .ico asset yet.
-        tray = new NOTIFYICONDATA { cbSize = (uint)Marshal.SizeOf<NOTIFYICONDATA>(), hWnd = hwnd, uID = 1, uFlags = 1 | 2 | 4, uCallbackMessage = 0x8001, hIcon = LoadIcon(0, (nint)32512), szTip = TrayTip, szInfo = "", szInfoTitle = "" };
+        var icon = Path.Combine(AppContext.BaseDirectory, "PrismPlay.ico");
+        window.AppWindow.SetIcon(icon);
+        // The small-icon size picks the hinted 16/20/24 px frame; IDI_APPLICATION only if the file is missing.
+        trayIcon = LoadImage(0, icon, 1, GetSystemMetrics(49), GetSystemMetrics(50), 0x10);
+        tray = new NOTIFYICONDATA { cbSize = (uint)Marshal.SizeOf<NOTIFYICONDATA>(), hWnd = hwnd, uID = 1, uFlags = 1 | 2 | 4, uCallbackMessage = 0x8001, hIcon = trayIcon != 0 ? trayIcon : LoadIcon(0, (nint)32512), szTip = TrayTip, szInfo = "", szInfoTitle = "" };
         Shell_NotifyIcon(0, ref tray);
         KeepOnTop();
     }
@@ -270,7 +274,7 @@ public sealed class NativeWindow : IOverlayInteraction
         if (msg is 0x2E0 or 0x7E) window.DispatcherQueue.TryEnqueue(() => { frame = default; Resize(logicalWidth, logicalHeight); KeepOnTop(); });
         return DefSubclassProc(h, msg, w, l);
     }
-    public void Dispose() { dragTimer.Stop(); StopSpring(); if (hotkeyRegistered) UnregisterHotKey(hwnd, activeHotkey); Shell_NotifyIcon(2, ref tray); RemoveWindowSubclass(hwnd, callback, 1); }
+    public void Dispose() { dragTimer.Stop(); StopSpring(); if (hotkeyRegistered) UnregisterHotKey(hwnd, activeHotkey); Shell_NotifyIcon(2, ref tray); if (trayIcon != 0) DestroyIcon(trayIcon); RemoveWindowSubclass(hwnd, callback, 1); }
     private delegate nint SubclassProc(nint hwnd, uint msg, nuint wParam, nint lParam, nuint id, nuint data);
     [StructLayout(LayoutKind.Sequential)] private struct POINT { public int X, Y; }
     [StructLayout(LayoutKind.Sequential)] private struct RECT { public int Left, Top, Right, Bottom; }
@@ -306,6 +310,8 @@ public sealed class NativeWindow : IOverlayInteraction
     [DllImport("user32.dll")] private static extern int GetSystemMetrics(int index);
     [DllImport("user32.dll", EntryPoint = "PostMessageW")] private static extern bool PostMessage(nint h, uint msg, nuint w, nint l);
     [DllImport("user32.dll", EntryPoint = "LoadIconW")] private static extern nint LoadIcon(nint instance, nint name);
+    [DllImport("user32.dll", EntryPoint = "LoadImageW", CharSet = CharSet.Unicode)] private static extern nint LoadImage(nint instance, string name, uint type, int cx, int cy, uint flags);
+    [DllImport("user32.dll")] private static extern bool DestroyIcon(nint icon);
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] private static extern bool Shell_NotifyIcon(uint command, ref NOTIFYICONDATA data);
     [DllImport("comctl32.dll")] private static extern bool SetWindowSubclass(nint h, SubclassProc callback, nuint id, nuint data);
     [DllImport("comctl32.dll")] private static extern bool RemoveWindowSubclass(nint h, SubclassProc callback, nuint id);

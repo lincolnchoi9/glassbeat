@@ -5,7 +5,7 @@ Workspace: `C:\Users\linco\OneDrive\Documents\ChatGPT\spot overlay`
 
 ## Current state
 
-PrismPlay is a working Windows 11 x64 Spotify overlay, version 0.4.0. The native C# host detects local Spotify media sessions; a bundled React interface renders the overlay in WebView2. Automatic lyrics are implemented and have been observed working with a real Spotify track. The latest build and self-contained publish succeeded.
+PrismPlay is a working Windows 11 x64 Spotify overlay, version 0.4.1. The native C# host detects local Spotify media sessions; a bundled React interface renders the overlay in WebView2. Automatic lyrics are implemented and have been observed working with a real Spotify track. The latest build and self-contained publish succeeded.
 
 Latest deliverable: `PrismPlay-0.4.0-win-x64.zip`, on E: only (location, size, and SHA-256 are recorded in the workspace copy of this file, under "0.4.0 PrismPlay rebrand"). The 0.2.0 and 0.3.0–0.3.5 packages are kept under their original names. Extract the whole archive; run PrismPlay.exe with its Web folder and runtime files alongside it. Edge WebView2 Runtime is required. The executable is unsigned. Updates are manual.
 
@@ -24,6 +24,12 @@ Git: `origin` is the project's GitHub repository; `main` holds the 0.3.5 and 0.4
 - Exclusive fullscreen, injection, anti-cheat integration, remote Spotify playback, signing, and store distribution are outside current scope.
 
 ## Most recent changes
+
+### 0.4.1 app icon (branch `mac-port`)
+
+- `assets/icon.png` (1024², the tile edge to edge, transparent outside its rim) and `src/PrismPlay/PrismPlay.ico` (16–256 px; 16/20/24 use a hinted ring glyph) come from `assets/make-icons.py <source artwork>`.
+- Windows: `<ApplicationIcon>`, `AppWindow.SetIcon` and the tray icon (`LoadImage` of the loose `PrismPlay.ico` at the small-icon size). macOS: `bundle.sh` builds `AppIcon.icns` on Apple's grid (`mac/scripts/icon-canvas.swift`, `sips`, `iconutil`); the menu bar uses a drawn template prism glyph.
+- Verified: C# build 0/0; the built exe's associated icon is the new artwork. Clean publish: `<BuildRoot>rtifacts\PrismPlay-0.4.1-win-x64.zip`, 85,867,455 bytes, SHA-256 `8479B26E06C157C8EABB67B643644C14D69883713085C6565833262385FC7EA1`, 512 files (no launch; the docs inside the ZIP predate this line).
 
 ### 0.4.0 PrismPlay rebrand
 

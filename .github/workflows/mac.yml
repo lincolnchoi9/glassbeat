@@ -18,11 +18,19 @@ jobs:
       - name: Bundle
         run: |
           set -o pipefail
-          bash mac/scripts/bundle.sh 2>&1 | tee build.log || {
-            bash mac/scripts/annotate.sh build.log
+          status=0
+          bash mac/scripts/bundle.sh 2>&1 | tee build.log || status=$?
+          bash mac/scripts/annotate.sh build.log
+          if [ "$status" -ne 0 ]; then
             echo "::error title=bundle.sh failed::$(tail -n 8 build.log | tr '\n' ' ' | cut -c1-900)"
             exit 1
-          }
+          fi
+      - name: Check app icon
+        run: |
+          app=mac/build/PrismPlay.app/Contents
+          test -s "$app/Resources/AppIcon.icns" || { echo "::error::AppIcon.icns is missing from the app bundle"; exit 1; }
+          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIconFile' "$app/Info.plist")" = AppIcon || { echo "::error::CFBundleIconFile is not AppIcon"; exit 1; }
+          echo "::notice title=App icon::AppIcon.icns $(stat -f %z "$app/Resources/AppIcon.icns") bytes"
       - name: Test
         run: |
           set -o pipefail
