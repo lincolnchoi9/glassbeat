@@ -266,12 +266,14 @@ final class Overlay: NSObject {
     private func fetchLyrics(_ track: Track, allowPlainUpgrade: Bool = false) {
         cancelLyrics()
         let generation = lyricsGeneration, provider = lyricsProvider
-        lyricsTask = Task { [weak self] in
+        // Applied on the main thread; a cancelled or superseded lookup (or another track) is dropped.
+        let apply = { [weak self] (result: Lyrics) in
+            guard let self, self.lyricsGeneration == generation, self.playback.track?.key == track.key else { return }
+            self.lyrics = result; self.publish()
+        }
+        lyricsTask = Task {
             guard let result = try? await provider.get(track, allowPlainUpgrade: allowPlainUpgrade) else { return }
-            DispatchQueue.main.async {
-                guard let self, self.lyricsGeneration == generation, self.playback.track?.key == track.key else { return }
-                self.lyrics = result; self.publish()
-            }
+            DispatchQueue.main.async { apply(result) }
         }
     }
 

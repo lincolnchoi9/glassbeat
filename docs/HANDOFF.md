@@ -29,7 +29,7 @@ Git: `origin` is the project's GitHub repository; `main` holds the 0.3.5 and 0.4
 
 - `assets/icon.png` (1024², the tile edge to edge, transparent outside its rim) and `src/PrismPlay/PrismPlay.ico` (16–256 px; 16/20/24 use a hinted ring glyph) come from `assets/make-icons.py <source artwork>`.
 - Windows: `<ApplicationIcon>`, `AppWindow.SetIcon` and the tray icon (`LoadImage` of the loose `PrismPlay.ico` at the small-icon size). macOS: `bundle.sh` builds `AppIcon.icns` on Apple's grid (`mac/scripts/icon-canvas.swift`, `sips`, `iconutil`); the menu bar uses a drawn template prism glyph.
-- Verified: C# build 0/0; the built exe's associated icon is the new artwork. Clean publish: `<BuildRoot>rtifacts\PrismPlay-0.4.1-win-x64.zip`, 85,867,455 bytes, SHA-256 `8479B26E06C157C8EABB67B643644C14D69883713085C6565833262385FC7EA1`, 512 files (no launch; the docs inside the ZIP predate this line).
+- Verified: C# build 0/0; the built exe's associated icon is the new artwork. Clean publish: `<BuildRoot>\artifacts\PrismPlay-0.4.1-win-x64.zip`, 85,867,455 bytes, SHA-256 `8479B26E06C157C8EABB67B643644C14D69883713085C6565833262385FC7EA1`, 512 files (no launch; the docs inside the ZIP predate this line).
 
 ### 0.4.0 PrismPlay rebrand
 
