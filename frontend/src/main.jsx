@@ -112,7 +112,7 @@ const Lyrics = memo(function Lyrics({ state }) {
 function Glass({ follow, corners, children }) {
   const [mouse, setMouse] = useState({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
   follow.current = setMouse;
-  return <LiquidGlass className="liquid-card" mode="standard" padding="0" cornerRadius={corners} displacementScale={34} blurAmount={.12} saturation={125} aberrationIntensity={.7} elasticity={0}
+  return <LiquidGlass className="liquid-card" mode="standard" padding="0" cornerRadius={corners} displacementScale={18} blurAmount={.12} saturation={125} aberrationIntensity={.25} elasticity={0}
     globalMousePos={{ x: mouse.x, y: mouse.y }} mouseOffset={{ x: mouse.offsetX, y: mouse.offsetY }} style={{ position: 'absolute', width: '100%' }}>{children}</LiquidGlass>;
 }
 

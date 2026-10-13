@@ -5,9 +5,9 @@ Workspace: `C:\Users\linco\OneDrive\Documents\ChatGPT\spot overlay`
 
 ## Current state
 
-GlassBeat is a working Windows 11 x64 Spotify overlay, version 0.3.4. The native C# host detects local Spotify media sessions; a bundled React interface renders the overlay in WebView2. Automatic lyrics are implemented and have been observed working with a real Spotify track. The latest build and self-contained publish succeeded.
+GlassBeat is a working Windows 11 x64 Spotify overlay, version 0.3.5. The native C# host detects local Spotify media sessions; a bundled React interface renders the overlay in WebView2. Automatic lyrics are implemented and have been observed working with a real Spotify track. The latest build and self-contained publish succeeded.
 
-Latest deliverable: `GlassBeat-0.3.4-win-x64.zip`, on E: only (location, size, and SHA-256 are recorded in the workspace copy of this file, under "0.3.4 smooth edges"). The 0.2.0 and 0.3.0–0.3.3 archives are kept. Extract the whole archive; run GlassBeat.exe with its Web folder and runtime files alongside it. Edge WebView2 Runtime is required. The executable is unsigned. Updates are manual.
+Latest deliverable: `GlassBeat-0.3.5-win-x64.zip`, on E: only (location, size, and SHA-256 are recorded in the workspace copy of this file, under "0.3.5 material"). The 0.2.0 and 0.3.0–0.3.4 archives are kept. Extract the whole archive; run GlassBeat.exe with its Web folder and runtime files alongside it. Edge WebView2 Runtime is required. The executable is unsigned. Updates are manual.
 
 No commits have been created. Project source is currently untracked in Git; preserve the existing files before making broad changes. Source snapshots before broad changes: `E:\CodexCaches\GlassBeat\snapshot-0.3.0-src` and `snapshot-0.3.2-src` (the 0.3.2 source, taken before the 0.3.3 work). Build output, dependencies, and archives are ignored.
 
@@ -24,6 +24,12 @@ No commits have been created. Project source is currently untracked in Git; pres
 - Exclusive fullscreen, injection, anti-cheat integration, remote Spotify playback, signing, and store distribution are outside current scope.
 
 ## Most recent changes
+
+### 0.3.5 material (visual only: `style.css` and the `Glass()` props)
+
+- `.stage` tint is a vertical gradient ending at a fixed 240 px (lighter top, deeper bottom; alpha still `Opacity × 1.2`). `.stage::after` (z-index 2) draws a 1 px hairline, a brighter top specular line and ~3 % SVG grain. The library rim spans lose their blurred shadows. The Album wash is the artwork at blur 56 px, saturate 1.5, opacity .5, masked to the top; without artwork it is a neutral white top glow. Drawer separator and Settings groups match; Light uses a frosted white gradient, a 6 % dark hairline and white groups. `Glass()`: displacementScale 18 (was 34), aberrationIntensity .25 (was .7).
+- Found, not fixed: the library's `.glass__warp` SVG filter (per-channel `screen` blends) dims a semi-transparent backdrop by its alpha and returns it nearly opaque. At Opacity 0.64 the card is 254/255 alpha, and Light renders grey (about 182 instead of 240). Without the warp it would be 189/255. Measured in Playwright with a transparent page.
+- Package: `E:\CodexCaches\GlassBeat\artifacts\GlassBeat-0.3.5-win-x64.zip`, 85,337,699 bytes, SHA-256 `5059300756881EEC99F1FC9438A9F89B9A8FBD7F3C367455AB10C4C35AD47CAA` (clean publish; smoke launch skipped; the docs inside the ZIP predate this line).
 
 ### 0.3.4 smooth edges
 
