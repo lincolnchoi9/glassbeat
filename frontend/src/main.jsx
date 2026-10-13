@@ -72,7 +72,7 @@ const Seek = memo(function Seek({ state, onScrub }) {
       onKeyDown={e => { const at = live.current, value = { ArrowLeft: at - 5, ArrowDown: at - 5, ArrowRight: at + 5, ArrowUp: at + 5, Home: 0, End: state.track?.duration || 0 }[e.key]; if (state.canSeek && value !== undefined) { e.preventDefault(); commit(value); } }}>
       <div className="seek-track"><div className="seek-fill"/><span className="seek-thumb"/></div>
     </div>
-    <div className="time-labels"><span>{formatTime(position)}</span><span className="mode-label">{state.status?.startsWith('SEEK') ? state.status : state.gameMode ? 'GAME MODE' : state.playing ? 'NOW PLAYING' : state.track ? 'PAUSED' : 'GLASSBEAT'}</span><span>−{formatTime((state.track?.duration || 0) - position)}</span></div>
+    <div className="time-labels"><span>{formatTime(position)}</span><span className="mode-label">{state.status?.startsWith('SEEK') ? state.status : state.gameMode ? 'GAME MODE' : state.playing ? 'NOW PLAYING' : state.track ? 'PAUSED' : 'PRISMPLAY'}</span><span>−{formatTime((state.track?.duration || 0) - position)}</span></div>
   </div>;
 });
 
@@ -211,7 +211,7 @@ function Settings({ state }) {
         </div>
         {state.generalStatus && <p className="note status" role="status">{state.generalStatus}</p>}
         <p className="note">Game mode locks the overlay and lets clicks pass through. Use the tray icon to unlock it anytime.</p>
-        <p className="note footer">GlassBeat {version} · No account. No telemetry. Saved on this PC.</p>
+        <p className="note footer">PrismPlay {version} · No account. No telemetry. Saved on this PC.</p>
       </>}
     </div>
   </section>;
@@ -284,7 +284,7 @@ function App() {
           <header className="track-header" onPointerDown={e => { if (state.gameMode || e.button !== 0) return; e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); dragRef.current = true; setDragging(true); send('dragBegin'); }} onPointerUp={e => { finishDrag(); if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); }} onLostPointerCapture={finishDrag} onPointerCancel={finishDrag}>
             <div className="cover">{state.artwork ? <img src={state.artwork} draggable="false" alt="Album artwork"/> : <Music2 size={23}/>}</div>
             <div className="track-copy"><div className="track-title" title={state.track?.title}>{state.track?.title || 'Your music, floating.'}</div><div className="track-artist">{state.track?.artist || state.status}</div></div>
-            {state.hotkeyError && <span className="hotkey-chip" role="status" title="Another app uses this game mode shortcut. Right-click the GlassBeat tray icon and choose Settings to pick another key.">{state.hotkeyError}</span>}
+            {state.hotkeyError && <span className="hotkey-chip" role="status" title="Another app uses this game mode shortcut. Right-click the PrismPlay tray icon and choose Settings to pick another key.">{state.hotkeyError}</span>}
           </header>
           <nav className="transport" aria-label="Playback controls"><Button icon={SkipBack} label="Previous track" disabled={!state.canPrevious} onClick={() => send('previous')}/><Button icon={state.playing ? Pause : Play} primary label={state.playing ? 'Pause' : 'Play'} disabled={state.playing ? !state.canPause : !state.canPlay} onClick={() => send(state.playing ? 'pause' : 'play')}/><Button icon={SkipForward} label="Next track" disabled={!state.canNext} onClick={() => send('next')}/></nav>
           <Seek state={state} onScrub={onScrub}/>

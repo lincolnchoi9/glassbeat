@@ -2,5 +2,5 @@
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
     <!-- Output may be redirected to E:; never compile a stale local obj/bin folder as source. -->
     <DefaultItemExcludes>$(DefaultItemExcludes);obj/**;bin/**</DefaultItemExcludes></PropertyGroup>
-  <ItemGroup><Compile Include="../../src/GlassBeat/Core.cs" Link="Core.cs" /><Compile Include="../../src/GlassBeat/LyricsProvider.cs" Link="LyricsProvider.cs" /><Compile Include="../../src/GlassBeat/DragMath.cs" Link="DragMath.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../src/PrismPlay/Core.cs" Link="Core.cs" /><Compile Include="../../src/PrismPlay/LyricsProvider.cs" Link="LyricsProvider.cs" /><Compile Include="../../src/PrismPlay/DragMath.cs" Link="DragMath.cs" /></ItemGroup>
 </Project>

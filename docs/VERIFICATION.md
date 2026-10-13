@@ -23,11 +23,11 @@ These observations do not validate actual click delivery through a game, monitor
 
 Automated, run after the final edit:
 
-- `dotnet build src/GlassBeat/GlassBeat.csproj -c Release` (E: output paths): **0 warnings, 0 errors**.
-- C# runner: **24 checks passed**. With E: intermediate paths, this needs `-p:DefaultItemExcludes=obj/**` because of the old `tests/GlassBeat.Tests/obj` folder (see HANDOFF).
+- `dotnet build src/PrismPlay/PrismPlay.csproj -c Release` (E: output paths): **0 warnings, 0 errors**.
+- C# runner: **24 checks passed**. With E: intermediate paths, this needs `-p:DefaultItemExcludes=obj/**` because of the old `tests/PrismPlay.Tests/obj` folder (see HANDOFF).
 - `npm run build` succeeded; `npm test` passed **3/3**. The Playwright suite (`test:ui`) was not run; the frontend was not changed.
 
-Observed in the built `GlassBeat.exe --inspect --demo` on one display at **100% (96 DPI)**. Input was sent with Win32 calls (`SendMessage`, `SetCursorPos`, `mouse_event`, `keybd_event`) from PowerShell. Screenshots are in `E:\CodexCaches\GlassBeat\screens`.
+Observed in the built `PrismPlay.exe --inspect --demo` on one display at **100% (96 DPI)**. Input was sent with Win32 calls (`SendMessage`, `SetCursorPos`, `mouse_event`, `keybd_event`) from PowerShell. Screenshots are in `E:\CodexCaches\GlassBeat\screens`.
 
 - **Size:** visible frame 446 × 583 px (460 × 590 including the invisible resize borders), the same as before the change. Nothing was clipped on any tab.
 - **Title bar:** `WM_NCHITTEST` returns HTCAPTION across the row from x = 6 to 300 DIP and y = 5 to 39 DIP. It returns HTMINBUTTON, HTMAXBUTTON, and HTCLOSE over the caption buttons, and HTCLIENT at y = 44 and in the content. Real mouse drags from the far-left and middle of the row moved the window by exactly the drag distance.
@@ -45,14 +45,14 @@ Not verified: 125/150/200% scaling, moving between monitors with different DPI, 
 
 Automated, run after the final code edit:
 
-- `dotnet build src/GlassBeat/GlassBeat.csproj -c Release` (E: output paths): **0 warnings, 0 errors**.
+- `dotnet build src/PrismPlay/PrismPlay.csproj -c Release` (E: output paths): **0 warnings, 0 errors**.
 - C# runner, built into and launched from `E:\CodexCaches\GlassBeat\bin` using the environment-variable form in HANDOFF: **30 checks passed**. With `-- --live`: **31 passed**, and the live LRCLIB lookup returned **53 timed lines**. The network was available.
 - The 6 new checks: a read-only `.tmp` cache file (`UnauthorizedAccessException` on write) still returns downloaded lyrics; an exclusively locked cache file (`IOException` on read and replace) falls back to the network; a cached plain-only entry is served with no network request; Retry (`allowPlainUpgrade`) upgrades it when the search has a synced row; the upgrade is persisted and is served offline; an offline Retry keeps the cached plain lyrics.
 - The unwritable-cache check failed against the old code ("Unwritable lyrics cache still returns downloaded lyrics") and passes now. The other new checks were not run against the old code; the Retry checks need the new parameter.
-- The compile command line now lists only `Program.cs` and the three linked sources, not the stale `tests/GlassBeat.Tests/obj` files. No `DefaultItemExcludes` flag was passed.
+- The compile command line now lists only `Program.cs` and the three linked sources, not the stale `tests/PrismPlay.Tests/obj` files. No `DefaultItemExcludes` flag was passed.
 - `npm run build` succeeded; `npm test` passed **3/3**. Playwright (`test:ui`) was not run; the frontend was not changed.
 
-Runner command finding: `dotnet run` with `-p:BaseOutputPath=E:/...` builds into E: but launches the local `tests/GlassBeat.Tests/bin` copy. It printed "24 checks passed" while the E: build had a failing check. See HANDOFF for the details and the working command.
+Runner command finding: `dotnet run` with `-p:BaseOutputPath=E:/...` builds into E: but launches the local `tests/PrismPlay.Tests/bin` copy. It printed "24 checks passed" while the E: build had a failing check. See HANDOFF for the details and the working command.
 
 Not verified: the `SpotifyPlayback.cs` changes (keeping the snapshot on transient errors, `Waiting` only when the session is no longer listed, event coalescing, and timeline/info re-read after artwork). These compile but cannot run in the test runner because they need WinRT. They were not observed with a live Spotify session. The Retry button was not clicked in the app; the Retry path was checked only at the provider level. No UI verification was done. Ads (S3) were not changed.
 
@@ -61,7 +61,7 @@ Not verified: the `SpotifyPlayback.cs` changes (keeping the snapshot on transien
 Automated, run after the final code edit:
 
 - `dotnet build` of the app and of the test runner, Release, E: output paths: **0 warnings, 0 errors**. No C# file changed in this batch.
-- C# runner, launched directly as `E:\CodexCaches\GlassBeat\bin\Release\net8.0\GlassBeat.Tests.exe`. The build was up to date, timestamped 19:30 on October 8, and no runner source changed. Results: **30 passed**, and with `--live` **31 passed**, with 53 timed lines.
+- C# runner, launched directly as `E:\CodexCaches\GlassBeat\bin\Release\net8.0\PrismPlay.Tests.exe`. The build was up to date, timestamped 19:30 on October 8, and no runner source changed. Results: **30 passed**, and with `--live` **31 passed**, with 53 timed lines.
 - `npm run build` succeeded; `npm test` passed **3/3**; `npm run test:ui` passed **12/12** (7 existing + 5 new) on a fresh build.
 - The new tests were first run against the unchanged frontend. Four failed as expected:
   - One hover sent 19 `size` messages (167, 177, 184, 200, ..., 157, 156) instead of `[200, 156]`.
@@ -74,7 +74,7 @@ Automated, run after the final code edit:
   - Root zoom 1.25 in Edge 154 gives `getBoundingClientRect().height` 195 for the 156 px stage. Hit testing is inside at y = 194 and outside at y = 196. A ResizeObserver fired 0 times on the zoom change.
   - A stub React DevTools hook counted 3 commits in 3 s of playback.
 
-Observed in the built `GlassBeat.exe --inspect --demo`: one display, 96 DPI, scale 1, work area 1920 × 1032. Pointer input came from `SetCursorPos` and `mouse_event`. Keyboard input and media emulation went to the app's own WebView2 over CDP. The app was started with `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9229`, so no keys were sent to other windows. Screenshots `20`–`31` are in `E:\CodexCaches\GlassBeat\screens`.
+Observed in the built `PrismPlay.exe --inspect --demo`: one display, 96 DPI, scale 1, work area 1920 × 1032. Pointer input came from `SetCursorPos` and `mouse_event`. Keyboard input and media emulation went to the app's own WebView2 over CDP. The app was started with `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9229`, so no keys were sent to other windows. Screenshots `20`–`31` are in `E:\CodexCaches\GlassBeat\screens`.
 
 - **Hover resizing:** the window height was polled every 2 ms over 5 hover cycles. Each cycle had exactly one change each way. 156 → 200 came 4–16 ms after the pointer entered. In 4 cycles, 200 → 156 came 509–522 ms after the pointer left, which is the 280 ms collapse delay plus 200 ms. In the first cycle it came at 235 ms, which was not explained. The expanded card was not clipped (`21`).
 - **Bottom edge:** the demo profile's Y was set to 862 temporarily. Expanding moved the window to Y = 832, so it ends at the work-area bottom (`30`). Collapsing returned it to 862. One poll sample caught 200 px at Y = 862 between the resize and the clamp move. The demo `settings.json` was restored byte for byte afterward (hash compared).
@@ -83,7 +83,7 @@ Observed in the built `GlassBeat.exe --inspect --demo`: one display, 96 DPI, sca
 - **OS reduced motion:** emulated through CDP `Emulation.setEmulatedMedia`; the Windows setting was not changed. The media query matched. `.stage` and `.extras` transitions were 0s with the app setting off, and the shrink had no 200 ms delay (`28`).
 - **Click, then leave:** the clicked Play button did not match `:focus-visible`. With continuous pointer motion out of the card, it collapsed (`25`). A synthetic `SetCursorPos` jump straight after a click left Chromium's `:hover` set, and the card stayed expanded (`25a`). This is hover state, not the new focus code. It was not compared with the old build.
 - **Text:** the 10 px `PAUSED` and `NOW PLAYING` labels fit at scale 1 (`20`, `23`).
-- No GlassBeat instance remains running. Real preferences, Windows settings, and Spotify were not touched.
+- No PrismPlay instance remains running. Real preferences, Windows settings, and Spotify were not touched.
 
 Not verified:
 - In the app: scales other than 1 (1.25 only in Playwright, 0.75 not at all), DPI other than 96, the real Windows animation setting, the light theme, game mode, and lyric open/close transitions.
@@ -95,20 +95,20 @@ Not verified:
 Automated, run after the final code edit:
 
 - `dotnet build` of the app and of the test runner, Release, E: output paths: **0 warnings, 0 errors**.
-- C# runner, launched directly as `E:\CodexCaches\GlassBeat\bin\Release\net8.0\GlassBeat.Tests.exe`. Its build is up to date (19:30); no runner source changed, and no check was added. Results: **30 passed**, and with `--live` **31 passed**, with 53 timed lines.
+- C# runner, launched directly as `E:\CodexCaches\GlassBeat\bin\Release\net8.0\PrismPlay.Tests.exe`. Its build is up to date (19:30); no runner source changed, and no check was added. Results: **30 passed**, and with `--live` **31 passed**, with 53 timed lines.
 - `npm run build` succeeded; `npm test` passed **3/3**; `npm run test:ui` passed **13/13** (12 existing + 1 new).
 - The new test was first run against a build with the chip line temporarily removed from `main.jsx`. It failed with "element(s) not found". The file was then restored (hash identical) and `dist` rebuilt.
 
-Observed in the built `GlassBeat.exe --inspect --demo`. Setup: two displays, both 96 DPI, primary work area 1920 × 1032, `SM_SWAPBUTTON` = 0. The demo profile's X/Y were temporarily set to 1560/862. X was moved because another always-on-top window covered the left part of the screen. The demo `settings.json` was restored byte for byte afterward (hash compared). Screenshots `40`–`49` are in `E:\CodexCaches\GlassBeat\screens`.
+Observed in the built `PrismPlay.exe --inspect --demo`. Setup: two displays, both 96 DPI, primary work area 1920 × 1032, `SM_SWAPBUTTON` = 0. The demo profile's X/Y were temporarily set to 1560/862. X was moved because another always-on-top window covered the left part of the screen. The demo `settings.json` was restored byte for byte afterward (hash compared). Screenshots `40`–`49` are in `E:\CodexCaches\GlassBeat\screens`.
 
 - **Hotkey conflict.** Before launch, a helper PowerShell process registered Ctrl+Alt+G as a thread hotkey. The card showed the chip "Ctrl+Alt+G in use" (`40`), and it stayed while playing showed NOW PLAYING (`41`, `42`). Settings was opened with a simulated tray double-click; the General tab and **Set** were invoked through UI Automation. While G was still held, Set showed "Shortcut in use. Previous shortcut retained." and the chip stayed (`48`). After the helper released G, Set showed "Shortcut saved." and the chip disappeared (`49`).
 - **Bottom edge.** The window rectangle was polled about every 1 ms over 3 hover cycles. Each cycle went 862/156 → 832/200 → 862/156 with no intermediate sample. The batch 3 run caught one sample of 200 px at Y = 862. The expanded bottom is 1032, the work-area bottom (`42`, `43`). The foreground window did not change during the cycles.
-- **Tray left-click.** Simulated by sending the icon's callback message (`0x8001` with `WM_LBUTTONUP`) to the overlay; the real icon was not clicked. After `ShowWindow(SW_HIDE)`, the message made the window visible again at the same rectangle (`44`, `45`). With GlassBeat's Settings window in the foreground, the same message left Settings in the foreground.
+- **Tray left-click.** Simulated by sending the icon's callback message (`0x8001` with `WM_LBUTTONUP`) to the overlay; the real icon was not clicked. After `ShowWindow(SW_HIDE)`, the message made the window visible again at the same rectangle (`44`, `45`). With PrismPlay's Settings window in the foreground, the same message left Settings in the foreground.
 - **Tray menu.** Opened twice by posting the callback with `WM_RBUTTONUP`. Both times a visible `#32768` menu window appeared (`46`, `47`), and a click outside the menu closed it.
   - Limits: the outside click landed on the overlay itself, which owns the menu. The overlay was already the foreground window, and the shell did not send the message.
   - That click also reached the header as a zero-length drag and saved Y = 832; see HANDOFF.
 - **Tray tooltip.** Not observed. The icon is in the hidden overflow, and UI Automation found only the `--inspect` taskbar button.
-- No GlassBeat instance or helper process remains running. Real preferences, Windows settings, and Spotify were not touched.
+- No PrismPlay instance or helper process remains running. Real preferences, Windows settings, and Spotify were not touched.
 
 Not verified:
 - Swapped mouse buttons. The change follows the `GetAsyncKeyState` documentation only.
@@ -123,11 +123,11 @@ Not verified:
 Automated, run after the final code edit:
 
 - `dotnet build` of the app and of the test runner, Release, E: output paths: **0 warnings, 0 errors**.
-- C# runner, launched directly as `E:\CodexCaches\GlassBeat\bin\Release\net8.0\GlassBeat.Tests.exe`. Its build is up to date (19:30); no runner source changed, and no check was added. Results: **30 passed**, and with `--live` **31 passed**, with 53 timed lines.
+- C# runner, launched directly as `E:\CodexCaches\GlassBeat\bin\Release\net8.0\PrismPlay.Tests.exe`. Its build is up to date (19:30); no runner source changed, and no check was added. Results: **30 passed**, and with `--live` **31 passed**, with 53 timed lines.
 - `npm run build` succeeded; `npm test` passed **3/3**; `npm run test:ui` passed **13/13**.
-- `scripts/publish.ps1` with the E: arguments succeeded, into a freshly emptied output folder. `GlassBeat.exe` file and product version: 0.3.1.
+- `scripts/publish.ps1` with the E: arguments succeeded, into a freshly emptied output folder. `PrismPlay.exe` file and product version: 0.3.1.
 
-Observed in the built `GlassBeat.exe --inspect --demo` (development build, not the ZIP). Setup: two 96-DPI displays, primary work area 1920 × 1032. The demo profile's X/Y were temporarily set to 1560/862, and the demo `settings.json` was restored byte for byte afterward (hash compared). Input came from `SetCursorPos` and `mouse_event`.
+Observed in the built `PrismPlay.exe --inspect --demo` (development build, not the ZIP). Setup: two 96-DPI displays, primary work area 1920 × 1032. The demo profile's X/Y were temporarily set to 1560/862, and the demo `settings.json` was restored byte for byte afterward (hash compared). Input came from `SetCursorPos` and `mouse_event`.
 
 - **Zero-length click (fix 1).** A press and release on the header with no movement expanded the card, and the window went to Y = 832 (the display clamp). `settings.json` stayed at Y = 862, with the same hash as before the click. Before the fix, the same click saved Y = 832 (batch 4).
 - **Real drag still saves.** A 40 px upward drag from the expanded position moved the window to Y = 792, and `settings.json` was written with Y = 792.
@@ -137,12 +137,12 @@ Observed in the built `GlassBeat.exe --inspect --demo` (development build, not t
 Package hash and smoke test: recorded in the workspace copy of this file after the archive was built.
 
 - **Package.** `E:\CodexCaches\GlassBeat\artifacts\GlassBeat-0.3.1-win-x64.zip`, copied to `artifacts\GlassBeat-0.3.1-win-x64.zip` in the workspace. Size 85,327,802 bytes. SHA-256 `1C587748784F16921FFEEEFF1661BABAE8539AB2DC10D00A5FBABAB810C27A57` (the two copies have the same hash). It has 511 files, and `Web/assets` holds only the current bundle (`index-53HuwKe6.css`, `index-BOxK3oDv.js`).
-- **Smoke test.** The archive was extracted into the new, empty folder `E:\CodexCaches\GlassBeat\smoke-0.3.1`, and `GlassBeat.exe --demo` was started from it. It was sampled every 2 s for 10 s. From 4 s on, the process was running, `IsWindowVisible` was true, the window was not DWM-cloaked, and it was 300 × 156 at the demo position (80, 80). It closed through `WM_CLOSE` with exit code 0. Only that instance was started and stopped, and the demo `settings.json` hash was unchanged.
+- **Smoke test.** The archive was extracted into the new, empty folder `E:\CodexCaches\GlassBeat\smoke-0.3.1`, and `PrismPlay.exe --demo` was started from it. It was sampled every 2 s for 10 s. From 4 s on, the process was running, `IsWindowVisible` was true, the window was not DWM-cloaked, and it was 300 × 156 at the demo position (80, 80). It closed through `WM_CLOSE` with exit code 0. Only that instance was started and stopped, and the demo `settings.json` hash was unchanged.
 - **Smoke-test limit: the window was not on top.** At the overlay's center, `WindowFromPoint` returned the foreground `RobloxPlayerBeta` window, and a screen capture of the area showed the game, not the card. The overlay's extended style was `0x100`, without `WS_EX_TOPMOST`. The 0.3.0 package shows the same `0x100` in `--demo`, so this is not new in 0.3.1. Normal (non-demo) mode was not checked, because that would use the real preferences.
 
 ## Always-on-top fix (October 8, 2026; development build, not packaged)
 
-No mouse or keyboard input was sent. All readings came from `GetForegroundWindow`, `GetWindowLongPtr(GWL_EXSTYLE) & 0x8`, and a z-order walk with `GetTopWindow`/`GetWindow(GW_HWNDNEXT)`, run by a PowerShell probe. Only window messages posted to the overlay's own hwnd were used: `WM_DISPLAYCHANGE`, the tray callback `0x8001` with `WM_LBUTTONUP` (which calls `Show()`), and `WM_CLOSE`. The foreground window throughout was `RobloxPlayerBeta` (`Roblox`, extended style `0x0`, not topmost); it stayed in the foreground in every run. Each launch was `--demo` (plus `--diagnostics` for the in-process log), and only the launched instance was closed. The demo `settings.json` hash was unchanged, and the real `GlassBeat\settings.json` was not touched.
+No mouse or keyboard input was sent. All readings came from `GetForegroundWindow`, `GetWindowLongPtr(GWL_EXSTYLE) & 0x8`, and a z-order walk with `GetTopWindow`/`GetWindow(GW_HWNDNEXT)`, run by a PowerShell probe. Only window messages posted to the overlay's own hwnd were used: `WM_DISPLAYCHANGE`, the tray callback `0x8001` with `WM_LBUTTONUP` (which calls `Show()`), and `WM_CLOSE`. The foreground window throughout was `RobloxPlayerBeta` (`Roblox`, extended style `0x0`, not topmost); it stayed in the foreground in every run. Each launch was `--demo` (plus `--diagnostics` for the in-process log), and only the launched instance was closed. The demo `settings.json` hash was unchanged, and the real `PrismPlay\settings.json` was not touched.
 
 - **Before (unfixed build):** extended style `0x100`, `WS_EX_TOPMOST` clear, overlay below Roblox in z-order. It was still clear after the posted display change and Show callback. A `SetWindowPos(HWND_TOPMOST, NOSIZE|NOMOVE|NOACTIVATE)` from the probe returned TRUE and left the bit clear.
 - **Diagnosis (temporary in-process logging, since removed):** presenter `Overlapped`, `IsAlwaysOnTop = true`, bit clear at constructor end and after `Activate()`. In-process `SetWindowPos(HWND_TOPMOST)` also left it clear. `IsAlwaysOnTop = false` then `true` set it.
@@ -157,10 +157,10 @@ No mouse or keyboard input was sent. All readings came from `GetForegroundWindow
 Automated, run after the final code edit:
 
 - `dotnet build` of the app and of the test runner, Release, E: output paths: **0 warnings, 0 errors**.
-- C# runner, built with the environment-variable form and launched directly as `E:\CodexCaches\GlassBeat\bin\Release\net8.0\GlassBeat.Tests.exe`: **31 passed** (30 existing + "Region spring rises without overshoot, settles by 0.6 s, and retargets without a jump"). `--live` was not run.
+- C# runner, built with the environment-variable form and launched directly as `E:\CodexCaches\GlassBeat\bin\Release\net8.0\PrismPlay.Tests.exe`: **31 passed** (30 existing + "Region spring rises without overshoot, settles by 0.6 s, and retargets without a jump"). `--live` was not run.
 - `npm test` **3/3**; `npm run build` succeeded; `npm run test:ui` **21/21**. The five stepped-size tests were rewritten for the new contract (one `size` per change with `animate`; drawer laid out at full height and kept mounted until the spring settles; reduced motion mounts/unmounts in the same commit; scale 1.25 posts 195/455 and renders that many pixel rows). New: the Settings drawer from `settingsOpen`; every control's message, with Scale only on release or per key step; Esc and shortcut recording; the lyrics↔Settings swap. Two existing timing assumptions were made robust (wait for the selected-button background transition; sample drawer transitions until settled). One motion test asserted a mid-transition frame in a fixed band and failed once under load in headless Edge (first frame after the drawer mounts can take over 100 ms there); it now accepts any midway frame. After the change: three consecutive full runs 21/21.
 
-Observed in the built `GlassBeat.exe` (development build, E:). Setup: two 96-DPI 1920 × 1080 displays (primary work area 1920 × 1032), primary at 179 Hz, scale 1. Input to the page went over CDP to the app's own WebView2 (`WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9229`); native readings came from `GetWindowRect`, `GetWindowRgnBox`, `GetWindowLongPtr`, `GetForegroundWindow`. No mouse or keyboard input was injected into Windows. Screenshots `01`–`10` are in `E:\CodexCaches\GlassBeat\screens\033` (`033-pw` holds headless renders).
+Observed in the built `PrismPlay.exe` (development build, E:). Setup: two 96-DPI 1920 × 1080 displays (primary work area 1920 × 1032), primary at 179 Hz, scale 1. Input to the page went over CDP to the app's own WebView2 (`WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9229`); native readings came from `GetWindowRect`, `GetWindowRgnBox`, `GetWindowLongPtr`, `GetForegroundWindow`. No mouse or keyboard input was injected into Windows. Screenshots `01`–`10` are in `E:\CodexCaches\GlassBeat\screens\033` (`033-pw` holds headless renders).
 
 - **Frame and region.** `--inspect --demo`: window 300 × 480 at every state; region 156 collapsed (`01`), 200 on hover (`02`), 408 with lyrics (`03`), 480 with Settings on each tab (`04`–`06`) and in the Light tint (`07`).
 - **Smoothness**, polled from a separate process about every 1 ms with no in-process logging. Hover 364→408, lyrics close 408→200, lyrics open 200→408, and collapse 408→364 were all monotonic. Steps were at most 7 px, at a cadence of about 5.5 ms (one per display frame at 179 Hz), with no gaps. The spring timing matched the formula: 404 of 408 px reached at 0.4 s.
@@ -185,10 +185,10 @@ Observed in the built `GlassBeat.exe` (development build, E:). Setup: two 96-DPI
   - The cursor was sampled resting over the overlay.
   - During a 45 s passive watch of the normal instance, Settings opened and the overlay became the foreground window 2.6 s later. That is consistent with a real click activating the open panel. No keydown reached the page.
   - The normal instance then exited cleanly at about 17:20:55, with no Application-log error. No automation closed it.
-- **Prefs.** The real `settings.json` had been rewritten by that instance (corners 29, lyrics open, X/Y 1414/523). It was restored from the backup taken before the run, and the hash matched (`CEE695BF…`). The demo `settings.json` was also restored (`8C51D4C7…`). The real `lyrics-cache` gained an entry from the normal run. The HKCU Run key has no GlassBeat value; its earlier state was not recorded.
+- **Prefs.** The real `settings.json` had been rewritten by that instance (corners 29, lyrics open, X/Y 1414/523). It was restored from the backup taken before the run, and the hash matched (`CEE695BF…`). The demo `settings.json` was also restored (`8C51D4C7…`). The real `lyrics-cache` gained an entry from the normal run. The HKCU Run key has no PrismPlay value; its earlier state was not recorded.
 
-- **Package:** `E:\CodexCaches\GlassBeat\artifacts\GlassBeat-0.3.3-win-x64.zip` (a copy of the script's `GlassBeat-win-x64.zip`; the generated `artifacts\GlassBeat-win-x64` folder was deleted before `scripts/publish.ps1` ran with the E: arguments). Size 85,332,992 bytes. SHA-256 `A63A01509EA42C2DADED0738A903B8D6C29FD0D903BC69BE931D65A837B00A41`. 511 files; `Web/assets` holds only `index-CdxHRive.js` and `index-CuH6djj2.css`; `SettingsWindow`/`Motion` are absent. `GlassBeat.exe` file version 0.3.3.0, product version 0.3.3. **Only on E:** (C: has about 3 GB free; not copied into the workspace `artifacts`).
-- **Smoke test:** extracted into the new folder `E:\CodexCaches\GlassBeat\smoke-0.3.3`; `GlassBeat.exe --demo` showed its window after 3 s and was sampled every 2 s for 10 s: running, visible, not cloaked, frame 300 × 480 at (80, 80), region 156, extended style `0x108` at every sample. `WM_CLOSE` → exit code 0. The demo `settings.json` hash was unchanged. The copies of this file and `VERIFICATION.md` inside the ZIP predate the archive and lack these two entries.
+- **Package:** `E:\CodexCaches\GlassBeat\artifacts\GlassBeat-0.3.3-win-x64.zip` (a copy of the script's `PrismPlay-win-x64.zip`; the generated `artifacts\PrismPlay-win-x64` folder was deleted before `scripts/publish.ps1` ran with the E: arguments). Size 85,332,992 bytes. SHA-256 `A63A01509EA42C2DADED0738A903B8D6C29FD0D903BC69BE931D65A837B00A41`. 511 files; `Web/assets` holds only `index-CdxHRive.js` and `index-CuH6djj2.css`; `SettingsWindow`/`Motion` are absent. `PrismPlay.exe` file version 0.3.3.0, product version 0.3.3. **Only on E:** (C: has about 3 GB free; not copied into the workspace `artifacts`).
+- **Smoke test:** extracted into the new folder `E:\CodexCaches\GlassBeat\smoke-0.3.3`; `PrismPlay.exe --demo` showed its window after 3 s and was sampled every 2 s for 10 s: running, visible, not cloaked, frame 300 × 480 at (80, 80), region 156, extended style `0x108` at every sample. `WM_CLOSE` → exit code 0. The demo `settings.json` hash was unchanged. The copies of this file and `VERIFICATION.md` inside the ZIP predate the archive and lack these two entries.
 
 Not verified: real keystrokes in Settings in a normal run; scales other than 1 and DPI other than 96 in the app; DPI or monitor changes during the spring; transparency effects off; the lyric import picker, the startup switch, and shortcut recording in the app (Playwright only); Narrator; the published package beyond the smoke test below.
 

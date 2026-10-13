@@ -1,6 +1,6 @@
 using Windows.Media.Control;
 
-namespace GlassBeat;
+namespace PrismPlay;
 public sealed record Playback(Track? Track, bool Playing, double Position, DateTimeOffset SampledAt, bool CanPlay, bool CanPause, bool CanPrevious, bool CanNext, bool CanSeek, byte[]? Artwork, string Status)
 {
     public static Playback Waiting(string status = "Open Spotify to get started") => new(null, false, 0, DateTimeOffset.UtcNow, false, false, false, false, false, null, status);

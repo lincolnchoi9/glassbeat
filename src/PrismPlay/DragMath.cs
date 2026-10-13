@@ -1,4 +1,4 @@
-namespace GlassBeat;
+namespace PrismPlay;
 public static class DragMath
 {
     // A short, frame-rate-independent response; no overshoot or prolonged trailing.

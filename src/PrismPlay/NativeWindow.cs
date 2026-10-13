@@ -4,7 +4,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using Windows.Graphics;
 
-namespace GlassBeat;
+namespace PrismPlay;
 public interface IOverlayInteraction : IDisposable
 {
     bool GameMode { get; }
@@ -89,7 +89,7 @@ public sealed class NativeWindow : IOverlayInteraction
         if (!before && window.AppWindow.Presenter is OverlappedPresenter presenter) { presenter.IsAlwaysOnTop = false; presenter.IsAlwaysOnTop = true; }
         DiagnosticLog.Write($"WS_EX_TOPMOST {before} -> {(GetWindowLongPtr(hwnd, -20) & 0x8) != 0}");
     }
-    private const string TrayTip = "GlassBeat · right-click for controls";
+    private const string TrayTip = "PrismPlay · right-click for controls";
     public bool HotkeyRegistered => hotkeyRegistered;
     public bool SetHotkey(char key)
     {
@@ -104,7 +104,7 @@ public sealed class NativeWindow : IOverlayInteraction
             activeHotkey = candidate; registeredKey = key; hotkeyRegistered = true;
         }
         // The tooltip reports a conflict only while no shortcut works; NIM_MODIFY, and TaskbarCreated re-adds with this text.
-        tray.szTip = hotkeyRegistered ? TrayTip : $"GlassBeat · Ctrl+Alt+{key} is in use · right-click for Settings";
+        tray.szTip = hotkeyRegistered ? TrayTip : $"PrismPlay · Ctrl+Alt+{key} is in use · right-click for Settings";
         Shell_NotifyIcon(1, ref tray);
         return registered;
     }
@@ -254,7 +254,7 @@ public sealed class NativeWindow : IOverlayInteraction
             {
                 var menu = CreatePopupMenu();
                 AppendMenu(menu, 0, 1, GameMode ? "Exit game mode" : "Enter game mode");
-                AppendMenu(menu, 0, 2, "Show overlay"); AppendMenu(menu, 0, 3, "Settings"); AppendMenu(menu, 0, 4, "Quit GlassBeat");
+                AppendMenu(menu, 0, 2, "Show overlay"); AppendMenu(menu, 0, 3, "Settings"); AppendMenu(menu, 0, 4, "Quit PrismPlay");
                 // Documented TrackPopupMenu pattern for notification icons: foreground first (user just clicked the tray), WM_NULL after,
                 // so a click outside dismisses the menu and the next one does not vanish immediately.
                 GetCursorPos(out var p); SetForegroundWindow(hwnd);

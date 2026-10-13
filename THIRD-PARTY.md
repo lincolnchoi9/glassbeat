@@ -9,4 +9,4 @@
 - Microsoft Edge WebView2: Microsoft runtime terms; installed separately on Windows. Frontend license texts are included in `Web/THIRD-PARTY-LICENSES.txt`.
 - LRCLIB API: https://lrclib.net/docs. Lyrics are requested on demand through its publicly documented API and attributed in the panel. No lyrics database or song lyrics are bundled in the app download. Lyrics remain the property of their respective rights holders.
 
-GlassBeat is an independent app and is not affiliated with Spotify or Apple. Those names describe compatibility and design inspiration only. No Spotify logos or Apple assets are included.
+PrismPlay is an independent app and is not affiliated with Spotify or Apple. Those names describe compatibility and design inspiration only. No Spotify logos or Apple assets are included.

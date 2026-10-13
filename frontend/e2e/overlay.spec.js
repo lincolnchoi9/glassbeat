@@ -302,7 +302,7 @@ test('each Settings control posts its message, and Scale applies only on release
   await page.getByRole('tab', { name: 'General' }).click();
   await page.getByRole('switch', { name: 'Start with Windows' }).click();
   expect((await sent(page, 'startup')).map(c => c.enabled)).toEqual([true]);
-  await expect(page.getByText(/GlassBeat \d+\.\d+\.\d+ · No account/)).toBeVisible();
+  await expect(page.getByText(/PrismPlay \d+\.\d+\.\d+ · No account/)).toBeVisible();
 });
 
 test('Esc closes Settings; shortcut recording sends the next key, and Esc first cancels recording', async ({ page }) => {

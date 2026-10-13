@@ -1,4 +1,4 @@
-using GlassBeat;
+using PrismPlay;
 
 var checks = 0;
 void Check(bool condition, string message) { if (!condition) throw new Exception(message); checks++; Console.WriteLine("PASS " + message); }
@@ -23,7 +23,16 @@ var prefs = new Preferences { Scale = double.NaN, Opacity = 5, Theme = "invalid"
 prefs.Normalize();
 Check(prefs.Scale == 1 && prefs.Opacity == .95 && prefs.Corners == 0, "Invalid numeric preferences recover safely");
 Check(prefs.Theme == "Album" && prefs.Hotkey == "G", "Invalid theme and shortcut recover safely");
-var cache = Path.Combine(Path.GetTempPath(), "GlassBeat-test-" + Guid.NewGuid().ToString("N"));
+var legacyRoot = Path.Combine(Path.GetTempPath(), "PrismPlay-migrate-" + Guid.NewGuid().ToString("N"));
+var (legacy, current) = (Path.Combine(legacyRoot, "GlassBeat"), Path.Combine(legacyRoot, "PrismPlay"));
+foreach (var dir in new[] { "lyrics-cache", "imported-lyrics", "WebView2" }) Directory.CreateDirectory(Path.Combine(legacy, dir));
+File.WriteAllText(Path.Combine(legacy, "settings.json"), "{}"); File.WriteAllText(Path.Combine(legacy, "lyrics-cache", "a.json"), "c");
+File.WriteAllText(Path.Combine(legacy, "imported-lyrics", "b.lrc"), "i"); File.WriteAllText(Path.Combine(legacy, "WebView2", "x"), "w");
+Check(LegacyData.Copy(legacy, current) && File.Exists(Path.Combine(current, "settings.json")) && File.ReadAllText(Path.Combine(current, "lyrics-cache", "a.json")) == "c"
+    && File.Exists(Path.Combine(current, "imported-lyrics", "b.lrc")) && !Directory.Exists(Path.Combine(current, "WebView2")) && File.Exists(Path.Combine(legacy, "WebView2", "x"))
+    && !LegacyData.Copy(legacy, current), "GlassBeat data migrates once, without WebView2, keeping the old folder");
+Directory.Delete(legacyRoot, true);
+var cache = Path.Combine(Path.GetTempPath(), "PrismPlay-test-" + Guid.NewGuid().ToString("N"));
 var handler = new FakeHandler();
 var provider = new LyricsProvider(new HttpClient(handler), cache, true);
 var track = new Track("Song", "Artist", "Album", 120);

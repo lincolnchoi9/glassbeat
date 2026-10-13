@@ -9,7 +9,7 @@ using Microsoft.Web.WebView2.Core;
 using Microsoft.Win32;
 using Windows.Storage.Pickers;
 
-namespace GlassBeat;
+namespace PrismPlay;
 
 // Windows owns playback/windowing. The bundled React app owns the entire overlay surface.
 public sealed class OverlayWindow : Window
@@ -39,7 +39,7 @@ public sealed class OverlayWindow : Window
 
     public OverlayWindow(bool demo)
     {
-        this.demo = demo; preferences = store.Load(); Title = "GlassBeat";
+        this.demo = demo; preferences = store.Load(); Title = "PrismPlay";
         // Slider drags call ApplySettings per tick; write the file once the value settles.
         saveTimer = DispatcherQueue.CreateTimer(); saveTimer.Interval = TimeSpan.FromMilliseconds(400); saveTimer.IsRepeating = false;
         saveTimer.Tick += (_, _) => Save();
@@ -64,7 +64,7 @@ public sealed class OverlayWindow : Window
         _ = InitializeWeb();
         if (demo)
         {
-            Receive(new(new Track("Weightless", "GlassBeat · preview session", "After hours", 213), false, 54, DateTimeOffset.UtcNow, true, true, true, true, true, null, ""));
+            Receive(new(new Track("Weightless", "PrismPlay · preview session", "After hours", 213), false, 54, DateTimeOffset.UtcNow, true, true, true, true, true, null, ""));
             lyrics = Lyrics.Parse("[00:00.00]Let the world slow down\n[00:50.00]We float above the city lights\n[01:00.00]And leave the noise behind", null);
         }
         else _ = playbackService.StartAsync();
@@ -82,23 +82,23 @@ public sealed class OverlayWindow : Window
             core.Settings.AreDevToolsEnabled = Environment.GetCommandLineArgs().Contains("--inspect");
             core.Settings.IsZoomControlEnabled = false; core.Settings.IsStatusBarEnabled = false;
             core.Settings.AreHostObjectsAllowed = false;
-            core.SetVirtualHostNameToFolderMapping("glassbeat.local", Path.Combine(AppContext.BaseDirectory, "Web"), CoreWebView2HostResourceAccessKind.DenyCors);
-            core.NavigationStarting += (_, e) => { if (!e.Uri.StartsWith("https://glassbeat.local/", StringComparison.Ordinal)) e.Cancel = true; };
+            core.SetVirtualHostNameToFolderMapping("prismplay.local", Path.Combine(AppContext.BaseDirectory, "Web"), CoreWebView2HostResourceAccessKind.DenyCors);
+            core.NavigationStarting += (_, e) => { if (!e.Uri.StartsWith("https://prismplay.local/", StringComparison.Ordinal)) e.Cancel = true; };
             core.NewWindowRequested += (_, e) => e.Handled = true;
             core.PermissionRequested += (_, e) => e.State = CoreWebView2PermissionState.Deny;
             core.WebMessageReceived += Message;
             core.NavigationCompleted += (_, e) => { if (!e.IsSuccess) DiagnosticLog.Write("Web UI navigation failed: " + e.WebErrorStatus); };
-            core.Navigate("https://glassbeat.local/index.html");
+            core.Navigate("https://prismplay.local/index.html");
         }
         catch (Exception e)
         {
             DiagnosticLog.Write("WebView initialization: " + e);
-            Content = new TextBlock { Text = "GlassBeat couldn't load its interface.\nEnsure Microsoft Edge WebView2 Runtime is installed, then restart.\nRight-click the tray icon for Settings or Quit.", TextWrapping = TextWrapping.Wrap, Margin = new Thickness(16), FontSize = 12 };
+            Content = new TextBlock { Text = "PrismPlay couldn't load its interface.\nEnsure Microsoft Edge WebView2 Runtime is installed, then restart.\nRight-click the tray icon for Settings or Quit.", TextWrapping = TextWrapping.Wrap, Margin = new Thickness(16), FontSize = 12 };
         }
     }
     private async void Message(CoreWebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
     {
-        if (disposed || !args.Source.StartsWith("https://glassbeat.local/", StringComparison.Ordinal)) return;
+        if (disposed || !args.Source.StartsWith("https://prismplay.local/", StringComparison.Ordinal)) return;
         try
         {
             using var message = JsonDocument.Parse(args.WebMessageAsJson);
@@ -151,7 +151,7 @@ public sealed class OverlayWindow : Window
                         try
                         {
                             using var run = Registry.CurrentUser.CreateSubKey(RunKey);
-                            if (enabled.GetBoolean()) run.SetValue("GlassBeat", $"\"{Environment.ProcessPath}\""); else run.DeleteValue("GlassBeat", false);
+                            if (enabled.GetBoolean()) run.SetValue("PrismPlay", $"\"{Environment.ProcessPath}\""); else run.DeleteValue("PrismPlay", false);
                         }
                         catch { generalStatus = "Windows did not allow the startup setting to change."; }
                         startup = StartupEnabled(); Publish();
@@ -284,7 +284,21 @@ public sealed class OverlayWindow : Window
     private static bool StartupEnabled()
     {
         using var key = Registry.CurrentUser.OpenSubKey(RunKey);
-        return key?.GetValue("GlassBeat") is string;
+        return key?.GetValue("PrismPlay") is string;
+    }
+    // Formerly GlassBeat: carry its data folder and startup entry over once. Runs before anything creates the PrismPlay folder.
+    internal static void MigrateFromGlassBeat()
+    {
+        try { LegacyData.Copy(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GlassBeat"), PreferencesStore.Folder); }
+        catch (Exception e) { DiagnosticLog.Write("GlassBeat data migration failed: " + e.Message); }
+        try
+        {
+            using var run = Registry.CurrentUser.OpenSubKey(RunKey, true);
+            if (run?.GetValue("GlassBeat") is not string) return;
+            run.SetValue("PrismPlay", $"\"{Environment.ProcessPath}\"");
+            run.DeleteValue("GlassBeat", false);
+        }
+        catch (Exception e) { DiagnosticLog.Write("GlassBeat startup migration failed: " + e.Message); }
     }
     private async Task<string> ImportLyrics(string path)
     {

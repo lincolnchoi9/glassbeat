@@ -1,4 +1,4 @@
-namespace GlassBeat;
+namespace PrismPlay;
 internal static class DiagnosticLog
 {
     public static void Write(string text)

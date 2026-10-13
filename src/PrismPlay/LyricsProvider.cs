@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace GlassBeat;
+namespace PrismPlay;
 public interface ILyricsProvider { Task<Lyrics> GetAsync(Track track, CancellationToken cancellationToken, bool allowPlainUpgrade = false); }
 public sealed class LyricsProvider : ILyricsProvider
 {
@@ -14,7 +14,7 @@ public sealed class LyricsProvider : ILyricsProvider
     internal LyricsProvider(HttpClient http, string cache, bool enabled)
     {
         this.http = http; this.cache = cache; this.enabled = enabled;
-        http.DefaultRequestHeaders.UserAgent.ParseAdd("GlassBeat/0.3 (Windows desktop overlay; LRCLIB client)");
+        http.DefaultRequestHeaders.UserAgent.ParseAdd("PrismPlay/0.4 (Windows desktop overlay; LRCLIB client)");
     }
     // allowPlainUpgrade (Retry): a cached plain-only entry re-runs the synced search instead of being served as-is.
     public async Task<Lyrics> GetAsync(Track track, CancellationToken cancellationToken, bool allowPlainUpgrade = false)

@@ -1,22 +1,24 @@
-# GlassBeat
+# PrismPlay
+
+Formerly GlassBeat. On first run PrismPlay copies your GlassBeat settings and lyrics, and moves the start-with-Windows entry; the old folder is left in place.
 
 A small glass Spotify overlay for Windows 11. Drag the header to place it, hover to reveal controls, and press **Ctrl+Alt+G** to toggle click-through game mode. Works with the Spotify desktop app on the same computer; no Spotify login is needed.
 
 ## Run
 
-Extract the entire `GlassBeat-win-x64.zip` to a permanent folder and run `GlassBeat.exe`. Keep all included files, including the `Web` folder, together. The download includes .NET and Windows App SDK dependencies. Windows 11 x64 and Microsoft Edge WebView2 Runtime are required; WebView2 normally ships with Windows 11. This development build is unsigned.
+Extract the entire `PrismPlay-win-x64.zip` to a permanent folder and run `PrismPlay.exe`. Keep all included files, including the `Web` folder, together. The download includes .NET and Windows App SDK dependencies. Windows 11 x64 and Microsoft Edge WebView2 Runtime are required; WebView2 normally ships with Windows 11. This development build is unsigned.
 
 The overlay stays visible while paused or waiting for Spotify. Previous/play/next sit between the track details and timeline. Hover to reveal lyrics, scale, game mode, and settings. Drag the artwork or track text to move it, with a short easing response and no dark dragging state. Click the timeline or drag its circular handle to seek when Spotify exposes that capability. The scale button cycles presets; Settings offers finer control. Lyrics and Settings open as a drawer that extends out of the bottom of the card, in the same glass; Esc or the Settings button closes Settings. While Settings is open, game mode is paused and a click inside the panel lets the overlay take keyboard focus.
 
 The overlay uses [rdev/liquid-glass-react](https://github.com/rdev/liquid-glass-react), pinned to 1.1.1, with album-derived color, refraction, and subtle highlights. Refraction samples the app's own background; it does not capture or refract the game beneath the window. The window itself is transparent, so the card has smooth rounded edges; there is no blur of what is behind it, and the tint (Opacity) keeps text readable. The native window frame is removed. Reduced motion disables easing and UI transitions.
 
-**Game mode:** mouse clicks pass through the card. Hover controls and dragging are disabled. Press the shortcut again, or right-click the GlassBeat tray icon and choose **Exit game mode**. The tray also offers Show, Settings, and Quit. A conflicting shortcut is reported on the card and can be changed in Settings. Exclusive fullscreen and anti-cheat compatibility are not promised; select borderless/windowed mode in the game.
+**Game mode:** mouse clicks pass through the card. Hover controls and dragging are disabled. Press the shortcut again, or right-click the PrismPlay tray icon and choose **Exit game mode**. The tray also offers Show, Settings, and Quit. A conflicting shortcut is reported on the card and can be changed in Settings. Exclusive fullscreen and anti-cheat compatibility are not promised; select borderless/windowed mode in the game.
 
 **Lyrics:** click the lyrics button in the hover tray. Lyrics are fetched automatically from LRCLIB when Spotify changes tracks—no account, API key, or imported file is needed. Timed lines glide into the center and crossfade in emphasis as playback advances or seeks. Reduced motion removes the transitions. If only plain lyrics exist, they are labeled unsynced; unavailable tracks show a clear message and a retry button. Positive timing offsets in Settings advance lyrics. Local `.lrc` imports remain optional overrides. Coverage depends on LRCLIB; no lyrics files are bundled with the app.
 
 **Customization:** scale, opacity, album/dark/light color, roundness, lyrics size and offset, reduced motion, and the Ctrl+Alt shortcut key. Startup is opt-in and uses the current executable location. Turn startup off before moving/removing the app.
 
-Settings live in `%LOCALAPPDATA%\GlassBeat\settings.json`. There is no telemetry, account, or app backend. Automatic lyrics send track title, artist, album, and duration to LRCLIB. Up to 100 matched responses are cached locally, so previously fetched lyrics work offline.
+Settings live in `%LOCALAPPDATA%\PrismPlay\settings.json`. There is no telemetry, account, or app backend. Automatic lyrics send track title, artist, album, and duration to LRCLIB. Up to 100 matched responses are cached locally, so previously fetched lyrics work offline.
 
 ## Build and test
 
@@ -24,16 +26,16 @@ Requires .NET 8 SDK and Node.js 22.12+ on Windows. NuGet restores Windows App SD
 
 ```powershell
 npm.cmd ci --prefix frontend
-dotnet build src/GlassBeat/GlassBeat.csproj -c Release
-dotnet run --project tests/GlassBeat.Tests/GlassBeat.Tests.csproj -c Release
+dotnet build src/PrismPlay/PrismPlay.csproj -c Release
+dotnet run --project tests/PrismPlay.Tests/PrismPlay.Tests.csproj -c Release
 npm.cmd test --prefix frontend
 npm.cmd run test:ui --prefix frontend
 ./scripts/publish.ps1
 ```
 
-The publish script produces `artifacts/GlassBeat-win-x64.zip`. Optional `-ArtifactRoot`, `-BuildRoot`, and `-PackageCache` arguments redirect large build files to another drive.
+The publish script produces `artifacts/PrismPlay-win-x64.zip`. Optional `-ArtifactRoot`, `-BuildRoot`, and `-PackageCache` arguments redirect large build files to another drive.
 
-Run `GlassBeat.exe --demo` for a synthetic playback preview (it does not connect to Spotify and uses separate `GlassBeat-Demo` preferences). Close any existing instance first. `--inspect` gives the real overlay a normal taskbar presence for UI inspection. `--diagnostics` writes a local startup/capability log without track titles or artists.
+Run `PrismPlay.exe --demo` for a synthetic playback preview (it does not connect to Spotify and uses separate `PrismPlay-Demo` preferences). Close any existing instance first. `--inspect` gives the real overlay a normal taskbar presence for UI inspection. `--diagnostics` writes a local startup/capability log without track titles or artists.
 
 Updates are manual: quit, replace the extracted app folder, and restart. Preferences remain in Local AppData. To uninstall, disable startup, quit, and remove the extracted folder; preferences and imported lyrics can optionally be removed separately.
 

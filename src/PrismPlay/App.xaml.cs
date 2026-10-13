@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml;
 
-namespace GlassBeat;
+namespace PrismPlay;
 public partial class App : Application
 {
     private OverlayWindow? window;
@@ -12,11 +12,13 @@ public partial class App : Application
     }
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        DiagnosticLog.Write("Launching");
         // --demo has its own prefs and WebView folders, so it may run beside the real overlay.
         var demo = Environment.GetCommandLineArgs().Contains("--demo");
-        singleton = new Mutex(true, demo ? "Local\\GlassBeat.Overlay.Demo" : "Local\\GlassBeat.Overlay", out var first);
+        singleton = new Mutex(true, demo ? "Local\\PrismPlay.Overlay.Demo" : "Local\\PrismPlay.Overlay", out var first);
         if (!first) { Exit(); return; }
+        // Before the first log line: --diagnostics creates the PrismPlay folder, which would skip the one-time copy.
+        if (!demo) OverlayWindow.MigrateFromGlassBeat();
+        DiagnosticLog.Write("Launching");
         window = new OverlayWindow(demo);
         DiagnosticLog.Write("Window constructed");
         window.Activate();
