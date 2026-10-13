@@ -67,27 +67,3 @@ public sealed class PreferencesStore : IPreferencesStore
         File.Move(path + ".tmp", path, true);
     }
 }
-// PrismPlay was formerly GlassBeat. On the first run, copy settings and lyrics (cached and imported) from the old folder; never
-// its WebView2 cache, and never delete the old folder.
-public static class LegacyData
-{
-    public static bool Copy(string legacy, string current)
-    {
-        if (Directory.Exists(current) || !Directory.Exists(legacy)) return false;
-        Directory.CreateDirectory(current);
-        var settings = Path.Combine(legacy, "settings.json");
-        if (File.Exists(settings)) File.Copy(settings, Path.Combine(current, "settings.json"));
-        foreach (var name in new[] { "lyrics-cache", "imported-lyrics" })
-        {
-            var from = Path.Combine(legacy, name);
-            if (!Directory.Exists(from)) continue;
-            foreach (var file in Directory.EnumerateFiles(from, "*", SearchOption.AllDirectories))
-            {
-                var to = Path.Combine(current, name, Path.GetRelativePath(from, file));
-                Directory.CreateDirectory(Path.GetDirectoryName(to)!);
-                File.Copy(file, to);
-            }
-        }
-        return true;
-    }
-}

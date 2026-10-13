@@ -286,20 +286,6 @@ public sealed class OverlayWindow : Window
         using var key = Registry.CurrentUser.OpenSubKey(RunKey);
         return key?.GetValue("PrismPlay") is string;
     }
-    // Formerly GlassBeat: carry its data folder and startup entry over once. Runs before anything creates the PrismPlay folder.
-    internal static void MigrateFromGlassBeat()
-    {
-        try { LegacyData.Copy(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GlassBeat"), PreferencesStore.Folder); }
-        catch (Exception e) { DiagnosticLog.Write("GlassBeat data migration failed: " + e.Message); }
-        try
-        {
-            using var run = Registry.CurrentUser.OpenSubKey(RunKey, true);
-            if (run?.GetValue("GlassBeat") is not string) return;
-            run.SetValue("PrismPlay", $"\"{Environment.ProcessPath}\"");
-            run.DeleteValue("GlassBeat", false);
-        }
-        catch (Exception e) { DiagnosticLog.Write("GlassBeat startup migration failed: " + e.Message); }
-    }
     private async Task<string> ImportLyrics(string path)
     {
         var track = playback.Track;

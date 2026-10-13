@@ -16,8 +16,6 @@ public partial class App : Application
         var demo = Environment.GetCommandLineArgs().Contains("--demo");
         singleton = new Mutex(true, demo ? "Local\\PrismPlay.Overlay.Demo" : "Local\\PrismPlay.Overlay", out var first);
         if (!first) { Exit(); return; }
-        // Before the first log line: --diagnostics creates the PrismPlay folder, which would skip the one-time copy.
-        if (!demo) OverlayWindow.MigrateFromGlassBeat();
         DiagnosticLog.Write("Launching");
         window = new OverlayWindow(demo);
         DiagnosticLog.Write("Window constructed");

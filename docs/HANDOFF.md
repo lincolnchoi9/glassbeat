@@ -5,11 +5,11 @@ Workspace: `C:\Users\linco\OneDrive\Documents\ChatGPT\spot overlay`
 
 ## Current state
 
-PrismPlay (formerly GlassBeat) is a working Windows 11 x64 Spotify overlay, version 0.4.0. The native C# host detects local Spotify media sessions; a bundled React interface renders the overlay in WebView2. Automatic lyrics are implemented and have been observed working with a real Spotify track. The latest build and self-contained publish succeeded.
+PrismPlay is a working Windows 11 x64 Spotify overlay, version 0.4.0. The native C# host detects local Spotify media sessions; a bundled React interface renders the overlay in WebView2. Automatic lyrics are implemented and have been observed working with a real Spotify track. The latest build and self-contained publish succeeded.
 
-Latest deliverable: `PrismPlay-0.4.0-win-x64.zip`, on E: only (location, size, and SHA-256 are recorded in the workspace copy of this file, under "0.4.0 PrismPlay rebrand"). The GlassBeat 0.2.0 and 0.3.0–0.3.5 archives are kept under their old names. Extract the whole archive; run PrismPlay.exe with its Web folder and runtime files alongside it. Edge WebView2 Runtime is required. The executable is unsigned. Updates are manual.
+Latest deliverable: `PrismPlay-0.4.0-win-x64.zip`, on E: only (location, size, and SHA-256 are recorded in the workspace copy of this file, under "0.4.0 PrismPlay rebrand"). The 0.2.0 and 0.3.0–0.3.5 packages are kept under their original names. Extract the whole archive; run PrismPlay.exe with its Web folder and runtime files alongside it. Edge WebView2 Runtime is required. The executable is unsigned. Updates are manual.
 
-Git: `origin` is `https://github.com/lincolnchoi9/glassbeat.git`; `main` holds the initial commit, and the 0.3.5 and 0.4.0 work is on the branch `prismplay-rebrand`. Older source snapshots before broad changes: `E:\CodexCaches\GlassBeat\snapshot-0.3.0-src` and `snapshot-0.3.2-src` (the 0.3.2 source, taken before the 0.3.3 work). Build output, dependencies, and archives are ignored.
+Git: `origin` is the project's GitHub repository; `main` holds the 0.3.5 and 0.4.0 work. Older source snapshots before broad changes: `<BuildRoot>\snapshot-0.3.0-src` and `snapshot-0.3.2-src` (the 0.3.2 source, taken before the 0.3.3 work). Build output, dependencies, and archives are ignored.
 
 ## User intent and accepted requirements
 
@@ -27,24 +27,24 @@ Git: `origin` is `https://github.com/lincolnchoi9/glassbeat.git`; `main` holds t
 
 ### 0.4.0 PrismPlay rebrand
 
-- GlassBeat is now PrismPlay: `src/PrismPlay/PrismPlay.csproj` (exe `PrismPlay.exe`, namespace `PrismPlay`), `tests/PrismPlay.Tests`, `prismplay-ui`, virtual host `prismplay.local`, mutexes `Local\PrismPlay.Overlay[.Demo]`, Run value `PrismPlay`, data in `%LOCALAPPDATA%\PrismPlay` (`PrismPlay-Demo`), and LRCLIB user agent `PrismPlay/0.4`. The E: cache folder keeps its `GlassBeat` name.
-- Migration (`LegacyData.Copy` in `Core.cs`, called by `OverlayWindow.MigrateFromGlassBeat` before the first log line): if `%LOCALAPPDATA%\PrismPlay` is missing and `GlassBeat` exists, copy `settings.json`, `lyrics-cache` and `imported-lyrics` (never `WebView2`), and replace a `GlassBeat` Run value with `PrismPlay`. The old folder is never deleted. One runner check covers the copy.
-- Verified: builds 0/0, runner 32/32, `npm test` 3/3, Playwright 21/21. Clean publish: `E:\CodexCaches\GlassBeat\artifacts\PrismPlay-0.4.0-win-x64.zip`, 85,338,977 bytes, SHA-256 `D72FDC9300F6BA9F6815117BD8618136D8AA88083A3D16467DEDC266362BA7EE`, 511 files (smoke launch skipped; the docs inside the ZIP predate this line).
+- Renamed to PrismPlay: `src/PrismPlay/PrismPlay.csproj` (exe `PrismPlay.exe`, namespace `PrismPlay`), `tests/PrismPlay.Tests`, `prismplay-ui`, virtual host `prismplay.local`, mutexes `Local\PrismPlay.Overlay[.Demo]`, Run value `PrismPlay`, data in `%LOCALAPPDATA%\PrismPlay` (`PrismPlay-Demo`), and LRCLIB user agent `PrismPlay/0.4`. The build folder (`<BuildRoot>`) keeps its old name.
+- Migration: 0.4.0 copies the old app's `settings.json`, `lyrics-cache` and `imported-lyrics` (never `WebView2`) into `%LOCALAPPDATA%\PrismPlay` once, if that folder is missing, and moves the old Run value to `PrismPlay`; the old folder is never deleted. This one-time migration and its runner check were removed after 0.4.0 (runner 31).
+- Verified: builds 0/0, runner 32/32, `npm test` 3/3, Playwright 21/21. Clean publish: `<BuildRoot>\artifacts\PrismPlay-0.4.0-win-x64.zip`, 85,338,977 bytes, SHA-256 `D72FDC9300F6BA9F6815117BD8618136D8AA88083A3D16467DEDC266362BA7EE`, 511 files (smoke launch skipped; the docs inside the ZIP predate this line).
 
 ### 0.3.5 material (visual only: `style.css` and the `Glass()` props)
 
 - `.stage` tint is a vertical gradient ending at a fixed 240 px (lighter top, deeper bottom; alpha still `Opacity × 1.2`). `.stage::after` (z-index 2) draws a 1 px hairline, a brighter top specular line and ~3 % SVG grain. The library rim spans lose their blurred shadows. The Album wash is the artwork at blur 56 px, saturate 1.5, opacity .5, masked to the top; without artwork it is a neutral white top glow. Drawer separator and Settings groups match; Light uses a frosted white gradient, a 6 % dark hairline and white groups. `Glass()`: displacementScale 18 (was 34), aberrationIntensity .25 (was .7).
 - Found, not fixed: the library's `.glass__warp` SVG filter (per-channel `screen` blends) dims a semi-transparent backdrop by its alpha and returns it nearly opaque. At Opacity 0.64 the card is 254/255 alpha, and Light renders grey (about 182 instead of 240). Without the warp it would be 189/255. Measured in Playwright with a transparent page.
-- Package: `E:\CodexCaches\GlassBeat\artifacts\GlassBeat-0.3.5-win-x64.zip`, 85,337,699 bytes, SHA-256 `5059300756881EEC99F1FC9438A9F89B9A8FBD7F3C367455AB10C4C35AD47CAA` (clean publish; smoke launch skipped; the docs inside the ZIP predate this line).
+- Package: the 0.3.5 package in `<BuildRoot>\artifacts`, 85,337,699 bytes, SHA-256 `5059300756881EEC99F1FC9438A9F89B9A8FBD7F3C367455AB10C4C35AD47CAA` (clean publish; smoke launch skipped; the docs inside the ZIP predate this line).
 
 ### 0.3.4 smooth edges
 
 - The user found the card edges pixelated: the GDI window region is 1-bit. They chose smooth edges over the native blur. `DesktopAcrylicBackdrop` is replaced by `TransparentBackdrop` (`OverlayWindow.cs`), a `SystemBackdrop` whose brush is fully transparent (the WinUIEx `TransparentTintBackdrop` pattern), so the window is per-pixel transparent.
-- The rounded CSS `.stage` paints the tint and atmosphere again; its spring height transition is the visible animation. The full-frame `.tint` is gone. The tint alpha is `Opacity × 1.2` (0.77 at the default 0.64; was ×0.68 over acrylic), and the Opacity range is unchanged. It was readable over white and over busy stripes in headless Edge (`E:\CodexCaches\GlassBeat\screens\034`).
+- The rounded CSS `.stage` paints the tint and atmosphere again; its spring height transition is the visible animation. The full-frame `.tint` is gone. The tint alpha is `Opacity × 1.2` (0.77 at the default 0.64; was ×0.68 over acrylic), and the Opacity range is unchanged. It was readable over white and over busy stripes in headless Edge (`<BuildRoot>\screens\034`).
 - The window region is now a hit-test rectangle: it grows at once and keeps its height for 560 ms on a shrink, so it never clips the card. The host spring now only moves the window near the bottom edge. Rounded regions and `CreateRoundRectRgn` were removed. Clicks on the transparent corners still hit the overlay (`ponytail:` comment).
 - **Transparency fix (first 0.3.4 build showed a #202020 rectangle around the card).** Cause: WinUI's WebView2 sets its system visual bridge background to a theme brush it looks up in `WebView2.Resources` as `BrushForThemeBackgroundColor` (`_HC` in high contrast), regardless of `DefaultBackgroundColor`. `OverlayWindow` now pre-seeds both keys with a transparent brush. Found by elimination in `--demo`: an opaque red backdrop brush showed only below a temporarily shortened WebView, and the strings and logic were read from `Microsoft.UI.Xaml.Controls.dll` and the WinUI WebView2 source. `NativeWindow` also does what WinUIEx `TransparentTintBackdrop` does: `DwmExtendFrameIntoClientArea` with zero margins, `DwmEnableBlurBehindWindow` with an off-window region, and a black `WM_ERASEBKGND`. That last part was not isolated as necessary. The backdrop brush is set before `base.OnTargetConnected`, and failures are logged under `--diagnostics`. `--demo` now uses its own single-instance mutex (`Local\PrismPlay.Overlay.Demo`), so it runs beside the real overlay.
-- Verified in `--demo` over a white helper form: pixels outside the rounded corners read #FFFFFF; zoomed corner `E:\CodexCaches\GlassBeat\screens\034\fixed-corner.png`. Game mode (ex-style `0x80128`, layered + transparent) stays transparent with lyrics open (`fixed-gamemode.png`); click-through was not tested with real input. Builds 0/0, runner 31, `npm test` 3/3, Playwright 21/21. Not verified: light-theme Windows, high contrast, a smoke launch of the republished ZIP.
-- Package (republished after the transparency fix): `E:\CodexCaches\GlassBeat\artifacts\GlassBeat-0.3.4-win-x64.zip`, 85,336,008 bytes, SHA-256 `F278FEE593D5EBA4A0EFBA6FBF89C796EC158D6394236851F24DFFBE5151130E`, 511 files (the docs inside the ZIP predate these lines).
+- Verified in `--demo` over a white helper form: pixels outside the rounded corners read #FFFFFF; zoomed corner `<BuildRoot>\screens\034\fixed-corner.png`. Game mode (ex-style `0x80128`, layered + transparent) stays transparent with lyrics open (`fixed-gamemode.png`); click-through was not tested with real input. Builds 0/0, runner 31, `npm test` 3/3, Playwright 21/21. Not verified: light-theme Windows, high contrast, a smoke launch of the republished ZIP.
+- Package (republished after the transparency fix): the 0.3.4 package in `<BuildRoot>\artifacts`, 85,336,008 bytes, SHA-256 `F278FEE593D5EBA4A0EFBA6FBF89C796EC158D6394236851F24DFFBE5151130E`, 511 files (the docs inside the ZIP predate these lines).
 
 ### 0.3.3 drawer + in-overlay Settings
 
@@ -76,8 +76,8 @@ Decisions and deviations:
 
 Verification is summarised under "Verification evidence" and detailed in `docs/VERIFICATION.md`.
 
-- **Package:** `E:\CodexCaches\GlassBeat\artifacts\GlassBeat-0.3.3-win-x64.zip` (a copy of the script's `PrismPlay-win-x64.zip`; the generated `artifacts\PrismPlay-win-x64` folder was deleted before `scripts/publish.ps1` ran with the E: arguments). Size 85,332,992 bytes. SHA-256 `A63A01509EA42C2DADED0738A903B8D6C29FD0D903BC69BE931D65A837B00A41`. 511 files; `Web/assets` holds only `index-CdxHRive.js` and `index-CuH6djj2.css`; `SettingsWindow`/`Motion` are absent. `PrismPlay.exe` file version 0.3.3.0, product version 0.3.3. **Only on E:** (C: has about 3 GB free; not copied into the workspace `artifacts`).
-- **Smoke test:** extracted into the new folder `E:\CodexCaches\GlassBeat\smoke-0.3.3`; `PrismPlay.exe --demo` showed its window after 3 s and was sampled every 2 s for 10 s: running, visible, not cloaked, frame 300 × 480 at (80, 80), region 156, extended style `0x108` at every sample. `WM_CLOSE` → exit code 0. The demo `settings.json` hash was unchanged. The copies of this file and `VERIFICATION.md` inside the ZIP predate the archive and lack these two entries.
+- **Package:** the 0.3.3 package in `<BuildRoot>\artifacts` (a copy of the script's `PrismPlay-win-x64.zip`; the generated `artifacts\PrismPlay-win-x64` folder was deleted before `scripts/publish.ps1` ran with the E: arguments). Size 85,332,992 bytes. SHA-256 `A63A01509EA42C2DADED0738A903B8D6C29FD0D903BC69BE931D65A837B00A41`. 511 files; `Web/assets` holds only `index-CdxHRive.js` and `index-CuH6djj2.css`; `SettingsWindow`/`Motion` are absent. `PrismPlay.exe` file version 0.3.3.0, product version 0.3.3. **Only on E:** (C: has about 3 GB free; not copied into the workspace `artifacts`).
+- **Smoke test:** extracted into the new folder `<BuildRoot>\smoke-0.3.3`; `PrismPlay.exe --demo` showed its window after 3 s and was sampled every 2 s for 10 s: running, visible, not cloaked, frame 300 × 480 at (80, 80), region 156, extended style `0x108` at every sample. `WM_CLOSE` → exit code 0. The demo `settings.json` hash was unchanged. The copies of this file and `VERIFICATION.md` inside the ZIP predate the archive and lack these two entries.
 
 ### Lyrics
 
@@ -154,10 +154,10 @@ Found while testing, not changed in batch 4 (both fixed in 0.3.1, see below):
 - **Shortcut text** (`SettingsWindow.cs` line 140; constructor line 14). Settings now receives a `hotkeyActive` callback (`() => native.HotkeyRegistered`, `OverlayWindow.cs` line 208). After a failed Set it shows "Shortcut in use. Previous shortcut retained." only when a shortcut is registered; otherwise "Shortcut in use. No shortcut is active; the default could not be registered."
 - **Save failure shown at once** (`OverlayWindow.cs` lines 39 and 202–203). `Save()` now calls `Publish()` after setting "Settings could not be saved". This covers the debounce timer, Settings closing, and the drag save. `Publish` never calls `Save`, so it cannot loop, and after `Closed` it does nothing. The debounce tick no longer publishes after a successful save; `ApplySettings` has already published that state.
 - **Version 0.3.1** in `PrismPlay.csproj`, `frontend/package.json`, the root entries of `frontend/package-lock.json`, and this file. The "PrismPlay 0.3" note in Settings and the `PrismPlay/0.3` LRCLIB user agent are major.minor and were left unchanged. The README has no version number.
-- **Packaging.** `scripts/publish.ps1` reuses its output folder and does not clean it, so the hashed web bundles of earlier publishes stayed in it. The 0.3.0 ZIP contains four unreferenced files: `Web/assets/index-BS8JGwtf.css`, `index-CjKUh2MD.js`, `index-BEs4iVRC.css`, and `index-uvrprPYq.js`. Before the 0.3.1 publish, the generated folder `E:\CodexCaches\GlassBeat\artifacts\PrismPlay-win-x64` was deleted and the script was run again. The script itself was not changed: it still writes `PrismPlay-win-x64.zip`, and the versioned name is a copy of that file.
+- **Packaging.** `scripts/publish.ps1` reuses its output folder and does not clean it, so the hashed web bundles of earlier publishes stayed in it. The 0.3.0 ZIP contains four unreferenced files: `Web/assets/index-BS8JGwtf.css`, `index-CjKUh2MD.js`, `index-BEs4iVRC.css`, and `index-uvrprPYq.js`. Before the 0.3.1 publish, the generated folder `<BuildRoot>\artifacts\PrismPlay-win-x64` was deleted and the script was run again. The script itself was not changed: it still writes `PrismPlay-win-x64.zip`, and the versioned name is a copy of that file.
 - The copy of this file and `VERIFICATION.md` inside the 0.3.1 ZIP was written before the archive existed. It does not contain the archive's own hash or the smoke-test result; the workspace copy does.
-- **Package:** `E:\CodexCaches\GlassBeat\artifacts\GlassBeat-0.3.1-win-x64.zip`, also copied to `artifacts\GlassBeat-0.3.1-win-x64.zip` in this workspace (C: had 582 MB free before the copy). Size 85,327,802 bytes. SHA-256 `1C587748784F16921FFEEEFF1661BABAE8539AB2DC10D00A5FBABAB810C27A57`.
-- **Smoke test:** extracted into the new folder `E:\CodexCaches\GlassBeat\smoke-0.3.1`, then `PrismPlay.exe --demo` ran for 10 s. The window was visible (not cloaked), 300 × 156, and it closed with exit code 0. However, it was not on top of the foreground game window, and its extended style has no `WS_EX_TOPMOST`. 0.3.0 behaves the same in `--demo`. See `docs/VERIFICATION.md`.
+- **Package:** the 0.3.1 package in `<BuildRoot>\artifacts`, also copied to the workspace `artifacts` folder (C: had 582 MB free before the copy). Size 85,327,802 bytes. SHA-256 `1C587748784F16921FFEEEFF1661BABAE8539AB2DC10D00A5FBABAB810C27A57`.
+- **Smoke test:** extracted into the new folder `<BuildRoot>\smoke-0.3.1`, then `PrismPlay.exe --demo` ran for 10 s. The window was visible (not cloaked), 300 × 156, and it closed with exit code 0. However, it was not on top of the foreground game window, and its extended style has no `WS_EX_TOPMOST`. 0.3.0 behaves the same in `--demo`. See `docs/VERIFICATION.md`.
 
 ### Always-on-top fix (after 0.3.1, source only; not packaged)
 
@@ -169,10 +169,10 @@ Found while testing, not changed in batch 4 (both fixed in 0.3.1, see below):
 ### 0.3.2 package
 
 - Contains the always-on-top fix above. Version 0.3.2 in `PrismPlay.csproj`, `frontend/package.json`, the two root entries of `frontend/package-lock.json`, and this file; other "0.3" strings unchanged. `PrismPlay.exe` file version 0.3.2.0, product version 0.3.2.
-- Release build of the app and the runner: zero warnings and errors. Runner (`E:\CodexCaches\GlassBeat\bin\Release\net8.0\PrismPlay.Tests.exe`, run directly, up to date) passed 30 offline. `npm test` passed 3/3. Playwright and `--live` were not run.
-- `E:\CodexCaches\GlassBeat\artifacts\PrismPlay-win-x64` was deleted before `scripts/publish.ps1` ran with the E: arguments. The ZIP has 511 files; `Web/assets` holds only `index-53HuwKe6.css` and `index-BOxK3oDv.js`.
-- **Package:** `E:\CodexCaches\GlassBeat\artifacts\GlassBeat-0.3.2-win-x64.zip` (a copy of the script's `PrismPlay-win-x64.zip`). Size 85,330,501 bytes. SHA-256 `4A59577626B5EC77E4D56253F53D41EA15C80A7B61058304D937A01109C7E377`. It is **only on E:**. The copy into the workspace `artifacts` folder was skipped because C: had about 0.49 GB free.
-- **Smoke test:** extracted into the new folder `E:\CodexCaches\GlassBeat\smoke-0.3.2`, then `PrismPlay.exe --demo` was sampled every 2 s for 10 s: running, visible, not cloaked, 300 × 156 at (80, 80), extended style `0x108` (`WS_EX_TOPMOST` set) at every sample. Closed with `WM_CLOSE`, exit code 0. No mouse or keyboard input was sent. Demo and normal `settings.json` hashes were unchanged. (A first run was also closed with `WM_CLOSE` after 37 s and showed `0x108`, but its exit code was not captured because of a script error.)
+- Release build of the app and the runner: zero warnings and errors. Runner (`<BuildRoot>\bin\Release\net8.0\PrismPlay.Tests.exe`, run directly, up to date) passed 30 offline. `npm test` passed 3/3. Playwright and `--live` were not run.
+- `<BuildRoot>\artifacts\PrismPlay-win-x64` was deleted before `scripts/publish.ps1` ran with the E: arguments. The ZIP has 511 files; `Web/assets` holds only `index-53HuwKe6.css` and `index-BOxK3oDv.js`.
+- **Package:** the 0.3.2 package in `<BuildRoot>\artifacts` (a copy of the script's `PrismPlay-win-x64.zip`). Size 85,330,501 bytes. SHA-256 `4A59577626B5EC77E4D56253F53D41EA15C80A7B61058304D937A01109C7E377`. It is **only on E:**. The copy into the workspace `artifacts` folder was skipped because C: had about 0.49 GB free.
+- **Smoke test:** extracted into the new folder `<BuildRoot>\smoke-0.3.2`, then `PrismPlay.exe --demo` was sampled every 2 s for 10 s: running, visible, not cloaked, 300 × 156 at (80, 80), extended style `0x108` (`WS_EX_TOPMOST` set) at every sample. Closed with `WM_CLOSE`, exit code 0. No mouse or keyboard input was sent. Demo and normal `settings.json` hashes were unchanged. (A first run was also closed with `WM_CLOSE` after 37 s and showed `0x108`, but its exit code was not captured because of a script error.)
 - The copy of this file inside the ZIP predates the archive and lacks this section.
 
 ## Files and responsibilities
@@ -200,21 +200,21 @@ C: has limited free space. Keep large NuGet caches, intermediate output, and pub
 
 - .NET SDK: 8.0.403
 - Node.js 24: `E:\Program Files\nodejs`
-- NuGet: `E:\CodexCaches\GlassBeat\nuget`
-- Build root: `E:\CodexCaches\GlassBeat`
-- Published app: `E:\CodexCaches\GlassBeat\artifacts\PrismPlay-win-x64`
+- Build root, written `<BuildRoot>` here and in `VERIFICATION.md`: a build folder on a drive with free space (on E:)
+- NuGet: `<BuildRoot>\nuget`
+- Published app: `<BuildRoot>\artifacts\PrismPlay-win-x64`
 
 Use PowerShell from the workspace:
 
 ```powershell
-$env:NUGET_PACKAGES='E:/CodexCaches/GlassBeat/nuget'
+$env:NUGET_PACKAGES='<BuildRoot>/nuget'
 dotnet build src/PrismPlay/PrismPlay.csproj -c Release `
-  -p:BaseOutputPath=E:/CodexCaches/GlassBeat/bin/ `
-  -p:BaseIntermediateOutputPath=E:/CodexCaches/GlassBeat/obj/
+  -p:BaseOutputPath=<BuildRoot>/bin/ `
+  -p:BaseIntermediateOutputPath=<BuildRoot>/obj/
 
-# Offline checks, then an optional real LRCLIB request. Pass the E: paths as environment
+# Offline checks, then an optional real LRCLIB request. Pass the build paths as environment
 # variables, not -p: (see below).
-$env:BaseOutputPath='E:/CodexCaches/GlassBeat/bin/'; $env:BaseIntermediateOutputPath='E:/CodexCaches/GlassBeat/obj/'
+$env:BaseOutputPath='<BuildRoot>/bin/'; $env:BaseIntermediateOutputPath='<BuildRoot>/obj/'
 dotnet run --project tests/PrismPlay.Tests/PrismPlay.Tests.csproj -c Release
 dotnet run --project tests/PrismPlay.Tests/PrismPlay.Tests.csproj -c Release -- --live
 Remove-Item Env:BaseOutputPath, Env:BaseIntermediateOutputPath
@@ -222,18 +222,18 @@ npm.cmd test --prefix frontend
 npm.cmd run build --prefix frontend
 npm.cmd run test:ui --prefix frontend
 
-$env:NPM_CONFIG_CACHE='E:/CodexCaches/GlassBeat/npm-cache'
-./scripts/publish.ps1 -ArtifactRoot E:/CodexCaches/GlassBeat/artifacts `
-  -BuildRoot E:/CodexCaches/GlassBeat `
-  -PackageCache E:/CodexCaches/GlassBeat/nuget
+$env:NPM_CONFIG_CACHE='<BuildRoot>/npm-cache'
+./scripts/publish.ps1 -ArtifactRoot <BuildRoot>/artifacts `
+  -BuildRoot <BuildRoot> `
+  -PackageCache <BuildRoot>/nuget
 ```
 
 C# test runner and output paths. Observed with .NET SDK 8.0.403:
 
 - `dotnet run ... -p:BaseOutputPath=E:/... -p:BaseIntermediateOutputPath=E:/...` builds into E: but then launches `tests/PrismPlay.Tests/bin/Release/net8.0/PrismPlay.Tests.exe`. If that local copy is older, its result is printed and the new build is never run. This was seen during this batch: the E: build had a failing check, and the command still printed "24 checks passed" from the 4:19 PM local copy. `--property:` behaves the same way. `-property:`, `/p:`, and `/property:` are not applied by `dotnet run` at all, so both build and run use the local `tests/PrismPlay.Tests/bin|obj` on C:.
-- Environment variables (as in the block above) apply to both the build and the launch. Another option is `dotnet build` with `-p:` and then `dotnet E:/CodexCaches/GlassBeat/bin/Release/net8.0/PrismPlay.Tests.dll [--live]`.
+- Environment variables (as in the block above) apply to both the build and the launch. Another option is `dotnet build` with `-p:` and then `dotnet <BuildRoot>/bin/Release/net8.0/PrismPlay.Tests.dll [--live]`.
 - `-p:DefaultItemExcludes=obj/**` is no longer needed. The test project excludes `obj/**` and `bin/**` itself.
-- Simplest of all: build `tests/PrismPlay.Tests/PrismPlay.Tests.csproj` with the environment variables set, then run `E:\CodexCaches\GlassBeat\bin\Release\net8.0\PrismPlay.Tests.exe [--live]` directly, after checking its timestamp. Batch 3 used this method.
+- Simplest of all: build `tests/PrismPlay.Tests/PrismPlay.Tests.csproj` with the environment variables set, then run `<BuildRoot>\bin\Release\net8.0\PrismPlay.Tests.exe [--live]` directly, after checking its timestamp. Batch 3 used this method.
 - Earlier "24 checks" results run through the `-p:` command came from the local copy, built at 4:19 PM on October 8. None of the runner's sources (`Program.cs`, `Core.cs`, `LyricsProvider.cs`, `DragMath.cs`) changed between that build and this batch, so those counts still applied to the code at that time.
 
 The .NET project invokes the frontend production build and copies bundled assets into Web after build/publish. On a fresh checkout run `npm.cmd ci --prefix frontend` first. Playwright uses installed Microsoft Edge. Stop only the running PrismPlay instance before replacing its loaded binaries.
@@ -251,7 +251,7 @@ Useful launch flags: `--inspect` makes the window discoverable on the taskbar fo
 - Real Windows media commands previously returned success for seek and play/pause during user testing. Mock UI tests additionally check command dispatch.
 - Settings usability pass: Release build had zero warnings and errors, 24 C# checks passed, and the React build plus 3 model tests passed. The built app was run with `--inspect --demo` at 100% scale (96 DPI) only, and Settings was driven with Win32 input. See `docs/VERIFICATION.md` for what was observed and what was not checked.
 - Lyrics and playback robustness batch: Release build had zero warnings and errors. The C# runner passed 30 offline checks, built and run from E: (6 new: unwritable and unreadable cache, plain-only cache hit without network, Retry upgrade, upgraded entry persisted, offline Retry keeps plain). With `--live` it passed 31, and the live lookup returned 53 timed lines. `npm run build` succeeded and `npm test` passed 3/3. The playback changes (C, D) are compiled only. They were not exercised against a live Spotify session, and nothing in this batch was checked in the UI.
-- Overlay interaction and motion batch: the Release build had zero warnings and errors. The C# runner, `E:\CodexCaches\GlassBeat\bin\Release\net8.0\PrismPlay.Tests.exe`, was run directly. Its build was up to date (19:30), and no runner source changed in this batch. It passed 30 offline and 31 with `--live` (53 timed lines). `npm run build` succeeded, `npm test` passed 3/3, and Playwright passed **12/12**: the 7 existing tests plus 5 new ones. Four of the new tests failed against the old frontend (size messages, OS reduced motion, keyboard, scale 1.25). The seek test passed on both. The built app was checked with `--inspect --demo` at 96 DPI and scale 1; see `docs/VERIFICATION.md`.
+- Overlay interaction and motion batch: the Release build had zero warnings and errors. The C# runner, `<BuildRoot>\bin\Release\net8.0\PrismPlay.Tests.exe`, was run directly. Its build was up to date (19:30), and no runner source changed in this batch. It passed 30 offline and 31 with `--live` (53 timed lines). `npm run build` succeeded, `npm test` passed 3/3, and Playwright passed **12/12**: the 7 existing tests plus 5 new ones. Four of the new tests failed against the old frontend (size messages, OS reduced motion, keyboard, scale 1.25). The seek test passed on both. The built app was checked with `--inspect --demo` at 96 DPI and scale 1; see `docs/VERIFICATION.md`.
 - Native window, tray, and hotkey batch: the Release build of the app and the runner had zero warnings and errors. The runner was launched directly from E: (no runner source changed) and passed 30 offline and 31 with `--live` (53 timed lines). `npm run build` succeeded, `npm test` passed 3/3, and Playwright passed **13/13**: the 12 existing tests plus the new hotkey-chip test. The new test failed against a build without the chip. In the app (`--inspect --demo`, two 96-DPI displays), the following were observed: the chip with a real Ctrl+Alt+G conflict, the chip clearing after a successful Set, the bottom-edge clamp with no intermediate frame, the tray left-click showing a hidden overlay, and the tray menu opening twice and closing on an outside click. The tray messages were simulated. See `docs/VERIFICATION.md`.
 
 - 0.3.1 final pass: the Release build of the app and the runner had zero warnings and errors. The runner was launched directly from E: (no runner source changed; build 19:30) and passed 30 offline and 31 with `--live` (53 timed lines). `npm run build` succeeded, `npm test` passed 3/3, and Playwright passed 13/13. The self-contained publish succeeded and `PrismPlay.exe` reports version 0.3.1. The zero-length drag fix was checked once in the app; see `docs/VERIFICATION.md`.

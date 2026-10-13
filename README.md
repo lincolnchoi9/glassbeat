@@ -1,7 +1,5 @@
 # PrismPlay
 
-Formerly GlassBeat. On first run PrismPlay copies your GlassBeat settings and lyrics, and moves the start-with-Windows entry; the old folder is left in place.
-
 A small glass Spotify overlay for Windows 11. Drag the header to place it, hover to reveal controls, and press **Ctrl+Alt+G** to toggle click-through game mode. Works with the Spotify desktop app on the same computer; no Spotify login is needed.
 
 ## Run
