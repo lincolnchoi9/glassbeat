@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <Version>0.3.4</Version>
+    <TargetFramework>net8.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.22000.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.22000.0</SupportedOSPlatformVersion>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <SelfContained>true</SelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
+  </ItemGroup>
+  <Target Name="BuildReactOverlay" BeforeTargets="PrepareForBuild">
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)/../../frontend" Command="npm.cmd run build" />
+  </Target>
+  <Target Name="CopyReactBuild" AfterTargets="Build">
+    <ItemGroup>
+      <OverlayAssets Include="$(MSBuildProjectDirectory)/../../frontend/dist/**/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(OverlayAssets)" DestinationFiles="@(OverlayAssets->'$(TargetDir)Web/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyReactPublish" AfterTargets="Publish">
+    <ItemGroup><PublishOverlayAssets Include="$(MSBuildProjectDirectory)/../../frontend/dist/**/*" /></ItemGroup>
+    <Copy SourceFiles="@(PublishOverlayAssets)" DestinationFiles="@(PublishOverlayAssets->'$(PublishDir)Web/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+</Project>
