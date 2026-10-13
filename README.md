@@ -18,6 +18,16 @@ The overlay uses [rdev/liquid-glass-react](https://github.com/rdev/liquid-glass-
 
 Settings live in `%LOCALAPPDATA%\PrismPlay\settings.json`. There is no telemetry, account, or app backend. Automatic lyrics send track title, artist, album, and duration to LRCLIB. Up to 100 matched responses are cached locally, so previously fetched lyrics work offline.
 
+## macOS
+
+A native macOS 13+ build (universal: Apple silicon and Intel) uses the same React overlay in an AppKit panel with a real frosted blur behind it. It lives in the menu bar (no Dock icon): Enter/Exit game mode, Show overlay, Settings, and Quit. The game mode shortcut is **⌃⌥G**.
+
+1. Open the repository's **Actions** tab, choose the latest green **mac** run, and download the `PrismPlay-mac-<version>` artifact. Unzip it, then unzip the `PrismPlay-mac-<version>.zip` inside it, and move `PrismPlay.app` to Applications.
+2. The app is ad-hoc signed, not notarized. Open it the first time with right-click › **Open** › **Open**, or run `xattr -dr com.apple.quarantine /Applications/PrismPlay.app` once.
+3. Start Spotify. macOS asks whether PrismPlay may control Spotify; choose **OK**. If you declined, the card says so: allow it in System Settings › Privacy & Security › Automation › PrismPlay › Spotify.
+
+Settings, the lyrics cache, and imported lyrics live in `~/Library/Application Support/PrismPlay/`. **Open at login** is in Settings › General. PrismPlay never launches Spotify; it reads Spotify only while Spotify is running. Build it yourself on a Mac with `mac/scripts/bundle.sh` (Node.js 22+ and Xcode 15+), which writes `mac/build/PrismPlay.app`; `cd mac && swift test` runs the core checks.
+
 ## Build and test
 
 Requires .NET 8 SDK and Node.js 22.12+ on Windows. NuGet restores Windows App SDK 1.8 and Windows SDK tools. React assets are bundled automatically by the .NET build; no development server is needed to run the app.

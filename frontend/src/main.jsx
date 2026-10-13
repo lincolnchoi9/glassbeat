@@ -159,7 +159,7 @@ function Switch({ label, checked, onChange }) {
 }
 
 // Click to record; the next letter or digit is sent to the host, which registers it. Esc cancels (and does not close Settings).
-function Shortcut({ hotkey }) {
+function Shortcut({ hotkey, mac }) {
   const [recording, setRecording] = useState(false);
   useEffect(() => {
     if (!recording) return;
@@ -173,15 +173,15 @@ function Shortcut({ hotkey }) {
     return () => window.removeEventListener('keydown', key, true);
   }, [recording]);
   return <div className="row"><span>Game mode shortcut</span>
-    <button type="button" className={`keys ${recording ? 'recording' : ''}`} aria-label={recording ? 'Press a letter or number' : `Game mode shortcut Ctrl+Alt+${hotkey}, change`} onClick={() => setRecording(true)} onBlur={() => setRecording(false)}>
-      {recording ? 'Press a key…' : <><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>{hotkey}</kbd></>}
+    <button type="button" className={`keys ${recording ? 'recording' : ''}`} aria-label={recording ? 'Press a letter or number' : `Game mode shortcut ${mac ? 'Control+Option' : 'Ctrl+Alt'}+${hotkey}, change`} onClick={() => setRecording(true)} onBlur={() => setRecording(false)}>
+      {recording ? 'Press a key…' : <><kbd>{mac ? '⌃' : 'Ctrl'}</kbd><kbd>{mac ? '⌥' : 'Alt'}</kbd><kbd>{hotkey}</kbd></>}
     </button></div>;
 }
 
 const SECTIONS = ['Appearance', 'Lyrics', 'General'];
 function Settings({ state }) {
   const [section, setSection] = useState(SECTIONS[0]);
-  const prefs = state.preferences;
+  const prefs = state.preferences, mac = state.platform === 'mac';
   return <section className="settings" aria-label="Settings">
     <Segmented tabs label="Settings sections" options={SECTIONS} value={section} onChange={setSection}/>
     <div className="pane" role="tabpanel" id={`pane-${section}`} aria-labelledby={`tab-${section}`}>
@@ -206,12 +206,12 @@ function Settings({ state }) {
       </>}
       {section === 'General' && <>
         <div className="group">
-          <Switch label="Start with Windows" checked={state.startup} onChange={enabled => send('startup', { enabled })}/>
-          <Shortcut hotkey={prefs.hotkey}/>
+          <Switch label={mac ? 'Open at login' : 'Start with Windows'} checked={state.startup} onChange={enabled => send('startup', { enabled })}/>
+          <Shortcut hotkey={prefs.hotkey} mac={mac}/>
         </div>
         {state.generalStatus && <p className="note status" role="status">{state.generalStatus}</p>}
-        <p className="note">Game mode locks the overlay and lets clicks pass through. Use the tray icon to unlock it anytime.</p>
-        <p className="note footer">PrismPlay {version} · No account. No telemetry. Saved on this PC.</p>
+        <p className="note">Game mode locks the overlay and lets clicks pass through. Use the {mac ? 'menu bar' : 'tray'} icon to unlock it anytime.</p>
+        <p className="note footer">PrismPlay {version} · No account. No telemetry. Saved on this {mac ? 'Mac' : 'PC'}.</p>
       </>}
     </div>
   </section>;
@@ -244,6 +244,9 @@ function App() {
   const height = CARD + (expanded ? EXTRAS : 0) + (drawer ? DRAWER[drawer] : 0);
   const layers = useLayers(drawer, reduced);
   const connected = state !== initial;
+  // The macOS host adds platform: 'mac'; Windows sends no platform field.
+  const mac = state.platform === 'mac';
+  useEffect(() => { document.documentElement.dataset.platform = mac ? 'mac' : 'windows'; }, [mac]);
   useEffect(() => {
     const receive = e => { if (e.data.type === 'snapshot') setState(e.data.state); };
     native?.addEventListener('message', receive); send('ready');
@@ -284,7 +287,7 @@ function App() {
           <header className="track-header" onPointerDown={e => { if (state.gameMode || e.button !== 0) return; e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); dragRef.current = true; setDragging(true); send('dragBegin'); }} onPointerUp={e => { finishDrag(); if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); }} onLostPointerCapture={finishDrag} onPointerCancel={finishDrag}>
             <div className="cover">{state.artwork ? <img src={state.artwork} draggable="false" alt="Album artwork"/> : <Music2 size={23}/>}</div>
             <div className="track-copy"><div className="track-title" title={state.track?.title}>{state.track?.title || 'Your music, floating.'}</div><div className="track-artist">{state.track?.artist || state.status}</div></div>
-            {state.hotkeyError && <span className="hotkey-chip" role="status" title="Another app uses this game mode shortcut. Right-click the PrismPlay tray icon and choose Settings to pick another key.">{state.hotkeyError}</span>}
+            {state.hotkeyError && <span className="hotkey-chip" role="status" title={`Another app uses this game mode shortcut. ${mac ? 'Click the PrismPlay menu bar icon' : 'Right-click the PrismPlay tray icon'} and choose Settings to pick another key.`}>{state.hotkeyError}</span>}
           </header>
           <nav className="transport" aria-label="Playback controls"><Button icon={SkipBack} label="Previous track" disabled={!state.canPrevious} onClick={() => send('previous')}/><Button icon={state.playing ? Pause : Play} primary label={state.playing ? 'Pause' : 'Play'} disabled={state.playing ? !state.canPause : !state.canPlay} onClick={() => send(state.playing ? 'pause' : 'play')}/><Button icon={SkipForward} label="Next track" disabled={!state.canNext} onClick={() => send('next')}/></nav>
           <Seek state={state} onScrub={onScrub}/>

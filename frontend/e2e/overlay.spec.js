@@ -385,3 +385,18 @@ test('missing automatic lyrics offer retry without requiring a file', async ({ p
   await expect(page.locator('.plain-lyrics')).toHaveText('Plain test lyrics');
   await expect(page.locator('.current-line')).toHaveCount(0);
 });
+
+test('the macOS host gets its own labels, keycaps and a full-height stage; Windows stays the default', async ({ page }) => {
+  await expect(page.locator('html')).toHaveAttribute('data-platform', 'windows');
+  await page.evaluate(() => window.receive({ platform: 'mac', hotkeyError: '⌃⌥G in use' }));
+  await expect(page.locator('html')).toHaveAttribute('data-platform', 'mac');
+  // Collapsed, yet the stage fills the 480 px page: the native panel's height is the visible edge on macOS.
+  expect(await page.locator('.stage').evaluate(el => getComputedStyle(el).height)).toBe('480px');
+  await expect(page.locator('.hotkey-chip')).toHaveAttribute('title', /menu bar icon/);
+  await page.evaluate(() => window.receive({ settingsOpen: true }));
+  await page.getByRole('tab', { name: 'General' }).click();
+  await expect(page.getByRole('switch', { name: 'Open at login' })).toBeVisible();
+  await expect(page.locator('.keys kbd')).toHaveText(['⌃', '⌥', 'G']);
+  await expect(page.getByText('Use the menu bar icon to unlock it anytime.')).toBeVisible();
+  await expect(page.locator('.glass__warp')).toBeHidden();
+});

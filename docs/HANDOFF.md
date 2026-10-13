@@ -189,9 +189,10 @@ Found while testing, not changed in batch 4 (both fixed in 0.3.1, see below):
 | `frontend/src/main.jsx` | Glass card, transport, captured-pointer seeking, hover actions, drawer slot, stable lyrics view, Settings drawer |
 | `frontend/src/style.css` | Glass appearance, full-frame tint, `--spring` curve, layout, interaction, drawer, Settings controls |
 | `frontend/src/model.js` | Playback interpolation, seek geometry, lyric selection, time formatting |
-| `frontend/e2e/overlay.spec.js` | Twenty-one Edge/Playwright interaction checks with a mocked native bridge |
+| `frontend/e2e/overlay.spec.js` | Twenty-two Edge/Playwright interaction checks with a mocked native bridge |
 | `tests/PrismPlay.Tests` | Dependency-free C# check runner, including optional live provider check |
 | `scripts/publish.ps1` | Self-contained x64 publish and ZIP creation |
+| `mac/` | Native macOS host and core port; `mac/scripts/bundle.sh` builds the .app (see "macOS port") |
 | `README.md`, `THIRD-PARTY.md`, `docs/VERIFICATION.md` | Usage, attribution, and tested/untested behavior |
 
 ## Build environment
@@ -289,6 +290,14 @@ Useful launch flags: `--inspect` makes the window discoverable on the taskbar fo
 10. Before public redistribution, confirm applicable lyrics/provider rights and terms. Public API availability is not proof of lyric redistribution rights. No lyrics are bundled. Review signing/distribution separately.
 
 The React refraction samples the overlay's own background. It does not capture/refract the game image underneath. Do not claim universal compatibility or measured low CPU/frame-time improvements without measuring them.
+
+## macOS port (`mac/`, branch `mac-port`)
+
+- SwiftPM package. `PrismPlayCore` ports `Core.cs`, `LyricsProvider.cs` and `DragMath.cs` (keep them in step); `PrismPlayCoreTests` mirrors the C# runner's checks (`PRISMPLAY_LIVE=1` adds the live LRCLIB lookup). `PrismPlay` is the AppKit host: `Overlay.swift` (OverlayWindow.cs + NativeWindow.cs), `Spotify.swift` (AppleScript), `main.swift`.
+- The React UI is shared. The host adds `platform: "mac"` to the snapshot; `main.jsx`/`style.css` key a few labels and the `[data-platform="mac"]` stage/tint rules on it. Windows sends no field, so it renders exactly as before.
+- Window: non-activating `NSPanel` (key only while Settings is open), a continuous-corner container with an `NSVisualEffectView` and a fixed 300×480 (×scale) transparent `WKWebView`. Expand/collapse animates the panel height with `DragMath.spring`; the page never re-lays out. `X`/`Y` in settings.json are the top-left in points, measured down from the primary display's top.
+- Bridge: a document-start user script provides `window.chrome.webview` over `webkit.messageHandlers.prismplay`; the page is served from `prismplay://app/` (`WKURLSchemeHandler`), and other navigation is cancelled.
+- No Mac here: CI (`.github/workflows/mac.yml`, macos-14) is the compiler. Build errors and test failures become annotations readable from the public check-runs API. Everything that needs a real Mac (window, blur, hover, drag, hotkey, AppleScript, login item) is untested.
 
 ## Local state and privacy
 
