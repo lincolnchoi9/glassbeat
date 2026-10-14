@@ -5,7 +5,7 @@ Workspace: `C:\Users\linco\OneDrive\Documents\ChatGPT\spot overlay`
 
 ## Current state
 
-PrismPlay is a working Windows 11 x64 Spotify overlay, version 0.4.1. The native C# host detects local Spotify media sessions; a bundled React interface renders the overlay in WebView2. Automatic lyrics are implemented and have been observed working with a real Spotify track. The latest build and self-contained publish succeeded.
+PrismPlay is a working Windows 11 x64 Spotify overlay, version 0.4.2. The native C# host detects local Spotify media sessions; a bundled React interface renders the overlay in WebView2. Automatic lyrics are implemented and have been observed working with a real Spotify track. The latest build and self-contained publish succeeded.
 
 Latest deliverable: `PrismPlay-0.4.0-win-x64.zip`, on E: only (location, size, and SHA-256 are recorded in the workspace copy of this file, under "0.4.0 PrismPlay rebrand"). The 0.2.0 and 0.3.0–0.3.5 packages are kept under their original names. Extract the whole archive; run PrismPlay.exe with its Web folder and runtime files alongside it. Edge WebView2 Runtime is required. The executable is unsigned. Updates are manual.
 
@@ -24,6 +24,12 @@ Git: `origin` is the project's GitHub repository; `main` holds the 0.3.5 and 0.4
 - Exclusive fullscreen, injection, anti-cheat integration, remote Spotify playback, signing, and store distribution are outside current scope.
 
 ## Most recent changes
+
+### 0.4.2 karaoke lyrics
+
+- The current synced line fills letter by letter (per-letter `<span>`s): about 8 letters/s, 1–5 s per line, never past the next line's start; a 3-letter soft opacity edge and a trailing `currentColor` glow (off in Light; uses `color-mix`, so macOS 13.1+). Reduced motion keeps the line fully lit.
+- A `requestAnimationFrame` loop writes `--p` on the current `<p>`; the progress comes from `lyricProgress` in `model.js`.
+- Verified: C# Release build 0/0, `npm test` 4/4, Playwright 22/22. Clean publish: `<BuildRoot>\artifacts\PrismPlay-0.4.2-win-x64.zip`, 85,867,896 bytes, SHA-256 `04CA7E338CF388D083B0E9C8F665040C4229C17B88769412462B3698CC01C62D`, 512 files; `PrismPlay.exe` reports 0.4.2 (no launch; the docs inside the ZIP predate this line).
 
 ### 0.4.1 app icon (branch `mac-port`)
 
