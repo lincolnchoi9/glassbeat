@@ -22,6 +22,7 @@ test.beforeEach(async ({ page }) => {
       window.snapshot = { ...window.snapshot, ...patch };
       listeners.forEach(handler => handler({ data: { type: 'snapshot', state: window.snapshot } }));
     };
+    window.emit = data => listeners.forEach(handler => handler({ data }));
   });
   await page.goto('http://127.0.0.1:4176');
   await expect(page.getByText('A little space')).toBeVisible();
@@ -399,4 +400,23 @@ test('the macOS host gets its own labels, keycaps and a full-height stage; Windo
   await expect(page.locator('.keys kbd')).toHaveText(['⌃', '⌥', 'G']);
   await expect(page.getByText('Use the menu bar icon to unlock it anytime.')).toBeVisible();
   await expect(page.locator('.glass__warp')).toBeHidden();
+});
+
+test('the Waveform setting posts its preferences, and the canvas reacts to audio beside the title unless a shortcut conflict shows', async ({ page }) => {
+  await openSettings(page); await clearCommands(page);
+  await expect(page.locator('.waveform')).toHaveCount(0);
+  await page.getByRole('switch', { name: 'Waveform' }).click();
+  expect((await sent(page, 'setPreference')).map(({ key, value }) => [key, value])).toEqual([['waveform', true]]);
+  await setPrefs(page, { waveform: true, waveformStyle: 'Bars' });
+  await expect(page.locator('.waveform')).toBeVisible();
+  // A loud 1 kHz frame lifts a bar into the canvas's top quarter, which a flat rest never reaches.
+  await page.evaluate(() => {
+    const pcm = Int16Array.from({ length: 1024 }, (_, i) => 26000 * Math.sin(2 * Math.PI * 1000 * i / 44100));
+    window.emit({ type: 'audio', rate: 44100, pcm: btoa(String.fromCharCode(...new Uint8Array(pcm.buffer))) });
+  });
+  await page.waitForFunction(() => { const c = document.querySelector('.waveform'); return c.getContext('2d').getImageData(0, 0, c.width, c.height / 4).data.some(v => v); });
+  await page.getByRole('radio', { name: 'Wave' }).click();
+  expect((await sent(page, 'setPreference')).at(-1)).toMatchObject({ key: 'waveformStyle', value: 'Wave' });
+  await page.evaluate(() => window.receive({ hotkeyError: 'Ctrl+Alt+G in use' }));
+  await expect(page.locator('.waveform')).toHaveCount(0);
 });

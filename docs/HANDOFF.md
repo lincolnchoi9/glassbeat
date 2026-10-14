@@ -25,6 +25,13 @@ Git: `origin` is the project's GitHub repository; `main` holds the 0.3.5 and 0.4
 
 ## Most recent changes
 
+### Waveform (unreleased, branch pending)
+
+- Appearance â€º Waveform (off by default) draws Spotify's live audio right of the title: Bars, Wave or Strip. Prefs `Waveform`/`WaveformStyle` ("Bars" | "Wave" | "Strip", else "Bars"); snapshot `waveformStatus` ('' when fine or off). Hidden while Reduced motion is on or the shortcut chip shows.
+- Contract (shared with macOS): host â†’ web `{ type: 'audio', rate, pcm }` about 30/s only while capturing; `pcm` is base64 of the newest 1024 mono little-endian Int16 samples (`AudioFrame.Encode` in `Core.cs`). The page keeps the frame outside React state and draws a canvas on rAF, resting (loop stopped) 250 ms after frames stop.
+- Windows: `SpotifyAudioCapture.cs`, WASAPI process loopback (`[ComImport]`, no packages) on the earliest `Spotify` process tree; 44.1 kHz 16-bit stereo, event-driven on a background MTA thread. `OverlayWindow.UpdateWaveform` runs it while Waveform is on and a track plays; failures set `waveformStatus` and retry on the next play or Waveform toggle.
+- Verified: C# Release build 0/0, runner 34/34, `npm test` 5/5, Playwright 23/23. A throwaway harness (not kept) activated loopback on the running Spotify tree, ~30 frames/s, none after Dispose; Spotify was paused, so real-audio levels and the app itself are unverified (no launch).
+
 ### 0.4.2 karaoke lyrics
 
 - The current synced line fills letter by letter (per-letter `<span>`s): about 8 letters/s, 1–5 s per line, never past the next line's start; a 3-letter soft opacity edge and a trailing `currentColor` glow (off in Light; uses `color-mix`, so macOS 13.1+). Reduced motion keeps the line fully lit.
@@ -194,6 +201,7 @@ Found while testing, not changed in batch 4 (both fixed in 0.3.1, see below):
 | `src/PrismPlay/OverlayWindow.cs` | WebView2 host, restricted local navigation, JSON bridge, playback/lyrics orchestration, Settings state and messages (preferences, shortcut, startup, lyric import), game-mode suspension |
 | `src/PrismPlay/NativeWindow.cs` | Topmost/no-activate (activatable while Settings is open), tray, hotkey, click-through, custom movement, fixed frame with a sprung window region, visible-rect display clamping |
 | `src/PrismPlay/SpotifyPlayback.cs` | Spotify media-session selection, capabilities, metadata/artwork, transport and seeking |
+| `src/PrismPlay/SpotifyAudioCapture.cs` | Waveform audio: WASAPI process loopback of Spotify's process tree, encoded frames for the overlay |
 | `src/PrismPlay/LyricsProvider.cs` | LRCLIB lookup/search, validation, cache, optional local overrides |
 | `src/PrismPlay/Core.cs` | Models, LRC parser, preferences normalization and persistence |
 | `src/PrismPlay/DragMath.cs` | Frame-rate-independent movement easing; critically damped region spring |
@@ -201,7 +209,7 @@ Found while testing, not changed in batch 4 (both fixed in 0.3.1, see below):
 | `frontend/src/main.jsx` | Glass card, transport, captured-pointer seeking, hover actions, drawer slot, stable lyrics view, Settings drawer |
 | `frontend/src/style.css` | Glass appearance, full-frame tint, `--spring` curve, layout, interaction, drawer, Settings controls |
 | `frontend/src/model.js` | Playback interpolation, seek geometry, lyric selection, time formatting |
-| `frontend/e2e/overlay.spec.js` | Twenty-two Edge/Playwright interaction checks with a mocked native bridge |
+| `frontend/e2e/overlay.spec.js` | Twenty-three Edge/Playwright interaction checks with a mocked native bridge |
 | `tests/PrismPlay.Tests` | Dependency-free C# check runner, including optional live provider check |
 | `scripts/publish.ps1` | Self-contained x64 publish and ZIP creation |
 | `mac/` | Native macOS host and core port; `mac/scripts/bundle.sh` builds the .app (see "macOS port") |

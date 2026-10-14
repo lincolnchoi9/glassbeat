@@ -35,6 +35,8 @@ public sealed class Preferences
     public double LyricsSize { get; set; } = 18;
     public double LyricsOffset { get; set; }
     public bool ReducedMotion { get; set; }
+    public bool Waveform { get; set; }
+    public string WaveformStyle { get; set; } = "Bars";
     public bool LyricsOpen { get; set; }
     public string Hotkey { get; set; } = "G";
     public int X { get; set; } = 80;
@@ -45,10 +47,29 @@ public sealed class Preferences
         Corners = FiniteClamp(Corners, 0, 32, 22); LyricsSize = FiniteClamp(LyricsSize, 12, 28, 18);
         LyricsOffset = FiniteClamp(LyricsOffset, -10, 10, 0);
         if (Theme is not ("Album" or "Dark" or "Light")) Theme = "Album";
+        if (WaveformStyle is not ("Bars" or "Wave" or "Strip")) WaveformStyle = "Bars";
         if (Hotkey.Length != 1 || !char.IsAsciiLetterOrDigit(Hotkey[0])) Hotkey = "G";
         Hotkey = Hotkey.ToUpperInvariant();
     }
     private static double FiniteClamp(double value, double min, double max, double fallback) => double.IsFinite(value) ? Math.Clamp(value, min, max) : fallback;
+}
+// Host â†’ web waveform frame: the newest 1024 samples downmixed to mono little-endian Int16, as base64 (zeros in front if fewer).
+public static class AudioFrame
+{
+    public const int Samples = 1024;
+    public static string Encode(ReadOnlySpan<short> interleaved, int channels)
+    {
+        var bytes = new byte[Samples * 2];
+        for (int i = 0, from = interleaved.Length / channels - Samples; i < Samples; i++)
+        {
+            if (from + i < 0) continue;
+            var sum = 0;
+            for (var c = 0; c < channels; c++) sum += interleaved[(from + i) * channels + c];
+            var mono = (short)(sum / channels);
+            bytes[i * 2] = (byte)mono; bytes[i * 2 + 1] = (byte)(mono >> 8);
+        }
+        return Convert.ToBase64String(bytes);
+    }
 }
 public interface IPreferencesStore { Preferences Load(); void Save(Preferences preferences); }
 public sealed class PreferencesStore : IPreferencesStore

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, memo 
 import { createRoot } from 'react-dom/client';
 import LiquidGlass from 'liquid-glass-react';
 import { Play, Pause, SkipBack, SkipForward, Captions, Maximize2, Gamepad2, Settings2, Music2, RefreshCw } from 'lucide-react';
-import { pointerToTime, positionAt, formatTime, activeLyric, lyricProgress, clamp } from './model';
+import { pointerToTime, positionAt, formatTime, activeLyric, lyricProgress, clamp, decodePcm, spectrumBands, level } from './model';
 import { version } from '../package.json';
 import './style.css';
 
@@ -17,9 +17,11 @@ const initial = {
   track: null, position: 0, sampledAt: Date.now(), playing: false, gameMode: false, moving: false,
   canPlay: false, canPause: false, canNext: false, canPrevious: false, canSeek: false,
   lyrics: { lines: [], plain: '', status: 'Play a song to see lyrics' },
-  preferences: { scale: 1, opacity: .64, theme: 'Album', corners: 22, lyricsSize: 18, lyricsOffset: 0, lyricsOpen: false, reducedMotion: false, hotkey: 'G' },
-  status: 'Open Spotify to get started', artwork: null, settingsOpen: false, startup: false, lyricsStatus: '', generalStatus: ''
+  preferences: { scale: 1, opacity: .64, theme: 'Album', corners: 22, lyricsSize: 18, lyricsOffset: 0, lyricsOpen: false, reducedMotion: false, hotkey: 'G', waveform: false, waveformStyle: 'Bars' },
+  status: 'Open Spotify to get started', artwork: null, settingsOpen: false, startup: false, lyricsStatus: '', generalStatus: '', waveformStatus: ''
 };
+// The newest host audio frame, about 30 a second while the waveform is on. Kept out of React state so frames never re-render App.
+const BANDS = 14, audio = { bands: new Array(BANDS).fill(0), level: 0, at: -Infinity, wake: null };
 
 function Button({ label, icon: Icon, onClick, disabled, active, primary }) {
   return <button type="button" className={`icon-button ${primary ? 'primary' : ''} ${active ? 'selected' : ''}`} aria-label={label} title={label} disabled={disabled} onClick={onClick}><Icon size={primary ? 21 : 16} strokeWidth={1.65} fill={primary ? 'currentColor' : 'none'} /></button>;
@@ -187,10 +189,56 @@ function Shortcut({ hotkey, mac }) {
     </button></div>;
 }
 
+// Beside the title. Each animation frame eases toward `audio` (fast attack, slow decay); 250 ms after the last frame it eases to a
+// flat rest and the loop stops until the next frame wakes it. The colour is the canvas's CSS colour, so it follows the tint.
+const W = 64, H = 28;
+function Waveform({ style, scale, theme }) {
+  const canvas = useRef(null);
+  useEffect(() => {
+    const el = canvas.current, ctx = el.getContext('2d'), css = getComputedStyle(el), k = devicePixelRatio * scale;
+    el.width = Math.round(W * k); el.height = Math.round(H * k); ctx.scale(k, k);
+    const bars = new Array(BANDS).fill(0), phase = [0, 0, 0], history = new Array(W / 2).fill(0);
+    const ease = (from, to) => from + (to - from) * (to > from ? .5 : .12), mean = (a, b) => bars.slice(a, b).reduce((x, y) => x + y) / (b - a);
+    let loud = 0, frame = 0, last = performance.now(), pushed = 0;
+    const draw = now => {
+      const live = now - audio.at < 250, dt = Math.min(.05, (now - last) / 1000);
+      last = now;
+      bars.forEach((v, i) => { bars[i] = ease(v, live ? audio.bands[i] : 0); });
+      loud = ease(loud, live ? audio.level : 0);
+      if (now - pushed >= 33) { pushed = now; history.push(loud); history.shift(); }
+      if (!live) history.forEach((v, i) => { history[i] = v * .88; });
+      ctx.clearRect(0, 0, W, H); ctx.fillStyle = ctx.strokeStyle = css.color; ctx.beginPath();
+      if (style === 'Wave') {
+        // Bass, mid and treble lines, tapered to the ends; they drift faster as the music gets louder.
+        ctx.lineWidth = 1.5;
+        [[1.5, 1, mean(0, 5)], [2.2, .55, mean(5, 10)], [3, .3, mean(10, BANDS)]].forEach(([cycles, alpha, amp], i) => {
+          phase[i] += dt * (1.5 + 10 * loud) * (1 + i * .4);
+          ctx.globalAlpha = alpha; ctx.beginPath();
+          for (let x = 0; x <= W; x++) ctx.lineTo(x, H / 2 + amp * (H / 2 - 1) * Math.sin(Math.PI * x / W) * Math.sin(2 * Math.PI * cycles * x / W + phase[i]));
+          ctx.stroke();
+        });
+      } else if (style === 'Strip') {
+        history.forEach((v, i) => { const h = Math.max(1, v * H); ctx.globalAlpha = Math.min(1, (i + 1) / (history.length * .4)); ctx.fillRect(i * 2 + 1, (H - h) / 2, 1, h); });
+      } else {
+        const pitch = W / BANDS, width = pitch * .6;
+        bars.forEach((v, i) => { const h = Math.max(2, v * H); ctx.roundRect(i * pitch + (pitch - width) / 2, (H - h) / 2, width, h, width / 2); });
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      const rest = !live && Math.max(loud, ...bars, ...history) < .01;
+      frame = rest ? 0 : requestAnimationFrame(draw);
+    };
+    audio.wake = () => { if (!frame) { last = performance.now(); frame = requestAnimationFrame(draw); } };
+    frame = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(frame); audio.wake = null; };
+  }, [style, scale, theme]);
+  return <canvas ref={canvas} className="waveform" aria-hidden="true"/>;
+}
+
 const SECTIONS = ['Appearance', 'Lyrics', 'General'];
 function Settings({ state }) {
   const [section, setSection] = useState(SECTIONS[0]);
-  const prefs = state.preferences, mac = state.platform === 'mac';
+  const prefs = state.preferences, mac = state.platform === 'mac', reduced = prefs.reducedMotion || osReducedMotion.matches;
   return <section className="settings" aria-label="Settings">
     <Segmented tabs label="Settings sections" options={SECTIONS} value={section} onChange={setSection}/>
     <div className="pane" role="tabpanel" id={`pane-${section}`} aria-labelledby={`tab-${section}`}>
@@ -202,6 +250,14 @@ function Settings({ state }) {
           <Slider label="Corners" min={0} max={32} step={1} value={prefs.corners} format={String} onChange={setPreference('corners')}/>
         </div>
         <div className="group"><Switch label="Reduced motion" checked={prefs.reducedMotion} onChange={setPreference('reducedMotion')}/></div>
+        <div className="group">
+          <Switch label="Waveform" checked={prefs.waveform} onChange={setPreference('waveform')}/>
+          {prefs.waveform && <div className="row"><span>Style</span><Segmented label="Waveform style" options={['Bars', 'Wave', 'Strip']} value={prefs.waveformStyle} onChange={setPreference('waveformStyle')}/></div>}
+        </div>
+        {state.waveformStatus && <p className="note status" role="status">{state.waveformStatus}</p>}
+        {prefs.waveform && reduced && <p className="note">The waveform is paused while Reduced motion is on.</p>}
+        <p className="note">Reads Spotify’s audio on this device to draw the wave. Nothing is recorded or sent.</p>
+        {mac && <p className="note">If it stays flat, allow PrismPlay in System Settings › Privacy &amp; Security › Screen &amp; System Audio Recording.</p>}
       </>}
       {section === 'Lyrics' && <>
         <div className="group">
@@ -257,7 +313,13 @@ function App() {
   const mac = state.platform === 'mac';
   useEffect(() => { document.documentElement.dataset.platform = mac ? 'mac' : 'windows'; }, [mac]);
   useEffect(() => {
-    const receive = e => { if (e.data.type === 'snapshot') setState(e.data.state); };
+    const receive = e => {
+      if (e.data.type === 'snapshot') setState(e.data.state);
+      else if (e.data.type === 'audio') {
+        const samples = decodePcm(e.data.pcm);
+        Object.assign(audio, { bands: spectrumBands(samples, e.data.rate, BANDS), level: level(samples), at: performance.now() }).wake?.();
+      }
+    };
     native?.addEventListener('message', receive); send('ready');
     return () => native?.removeEventListener('message', receive);
   }, []);
@@ -296,6 +358,7 @@ function App() {
           <header className="track-header" onPointerDown={e => { if (state.gameMode || e.button !== 0) return; e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); dragRef.current = true; setDragging(true); send('dragBegin'); }} onPointerUp={e => { finishDrag(); if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); }} onLostPointerCapture={finishDrag} onPointerCancel={finishDrag}>
             <div className="cover">{state.artwork ? <img src={state.artwork} draggable="false" alt="Album artwork"/> : <Music2 size={23}/>}</div>
             <div className="track-copy"><div className="track-title" title={state.track?.title}>{state.track?.title || 'Your music, floating.'}</div><div className="track-artist">{state.track?.artist || state.status}</div></div>
+            {prefs.waveform && !reduced && !state.hotkeyError && <Waveform style={prefs.waveformStyle} scale={prefs.scale} theme={prefs.theme}/>}
             {state.hotkeyError && <span className="hotkey-chip" role="status" title={`Another app uses this game mode shortcut. ${mac ? 'Click the PrismPlay menu bar icon' : 'Right-click the PrismPlay tray icon'} and choose Settings to pick another key.`}>{state.hotkeyError}</span>}
           </header>
           <nav className="transport" aria-label="Playback controls"><Button icon={SkipBack} label="Previous track" disabled={!state.canPrevious} onClick={() => send('previous')}/><Button icon={state.playing ? Pause : Play} primary label={state.playing ? 'Pause' : 'Play'} disabled={state.playing ? !state.canPause : !state.canPlay} onClick={() => send(state.playing ? 'pause' : 'play')}/><Button icon={SkipForward} label="Next track" disabled={!state.canNext} onClick={() => send('next')}/></nav>

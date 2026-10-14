@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { pointerToTime, positionAt, formatTime, activeLyric, lyricProgress } from '../src/model.js';
+import { pointerToTime, positionAt, formatTime, activeLyric, lyricProgress, decodePcm, spectrumBands, level } from '../src/model.js';
 test('seek includes full circular thumb clearance and clamps captured pointer', () => {
   assert.equal(pointerToTime(16, 10, 272, 200), 0);
   assert.equal(pointerToTime(146, 10, 272, 200), 100);
@@ -30,4 +30,16 @@ test('lyric fill runs about 8 letters/s, 1 to 5 s, never past the next line or t
   assert.equal(at(3, 52.5), 2); // empty line is one '♪', at least 1 s
   assert.equal(at(4, 53.75, 54.5), 13.5); assert.equal(at(4, 54.5, 54.5), 27); assert.equal(at(4, 54.5, 0), 13.5); // last line: track end, or 3 s if unknown
   assert.equal(at(-1, 30), 0);
+});
+test('waveform decodes Int16 frames, finds a 1 kHz tone in its band, and reads silence as zero', () => {
+  const ints = Int16Array.from([0, 16384, -32768, 32767, -1]);
+  const decoded = decodePcm(Buffer.from(ints.buffer).toString('base64'));
+  assert.deepEqual(Array.from(decoded, v => Math.round(v * 32768)), Array.from(ints));
+  const count = 14, rate = 44100, sine = Float32Array.from({ length: 1024 }, (_, i) => .8 * Math.sin(2 * Math.PI * 1000 * i / rate));
+  const bands = spectrumBands(sine, rate, count), expected = Math.floor(Math.log(1000 / 50) / Math.log(240) * count);
+  assert.equal(bands.indexOf(Math.max(...bands)), expected);
+  assert.ok(bands[expected] > .9 && level(sine) > .85);
+  const silence = new Float32Array(1024);
+  assert.deepEqual(spectrumBands(silence, rate, count), new Array(count).fill(0));
+  assert.equal(level(silence), 0);
 });

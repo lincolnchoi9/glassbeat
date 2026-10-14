@@ -31,7 +31,9 @@ public sealed class OverlayWindow : Window
     private bool settingsOpen, suspendedGameMode, startup;
     private bool ready, disposed, moving, seekRejected;
     private string status = "Open Spotify to get started";
-    private string hotkeyError = "", lyricsStatus = "", generalStatus = "";
+    private string hotkeyError = "", lyricsStatus = "", generalStatus = "", waveformStatus = "";
+    private SpotifyAudioCapture? capture;
+    private bool waveformWanted;
     private double logicalHeight = 156;
     private byte[]? lastArtwork;
     private string? artwork;
@@ -58,7 +60,7 @@ public sealed class OverlayWindow : Window
         playbackService.Changed += OnPlayback;
         Closed += (_, _) =>
         {
-            disposed = true; ready = false; lyricsCancellation.Cancel(); playbackService.Dispose(); native.Dispose();
+            disposed = true; ready = false; lyricsCancellation.Cancel(); playbackService.Dispose(); native.Dispose(); capture?.Dispose();
             Save(); web.Close(); Application.Current.Exit();
         };
         _ = InitializeWeb();
@@ -190,7 +192,7 @@ public sealed class OverlayWindow : Window
             lastArtwork = state.Artwork;
             artwork = state.Artwork is null ? null : "data:image/png;base64," + Convert.ToBase64String(state.Artwork);
         }
-        Publish();
+        UpdateWaveform(); Publish();
     }
     private async Task FetchLyrics(Track track, CancellationToken token, bool allowPlainUpgrade = false)
     {
@@ -229,7 +231,7 @@ public sealed class OverlayWindow : Window
             playback.CanPlay, playback.CanPause, playback.CanPrevious, playback.CanNext, playback.CanSeek,
             Artwork = artwork, Preferences = preferences, GameMode = native.GameMode, Moving = moving,
             Lyrics = lyrics, Status = status, SeekRejected = seekRejected, HotkeyError = hotkeyError,
-            SettingsOpen = settingsOpen, Startup = startup, LyricsStatus = lyricsStatus, GeneralStatus = generalStatus
+            SettingsOpen = settingsOpen, Startup = startup, LyricsStatus = lyricsStatus, GeneralStatus = generalStatus, WaveformStatus = waveformStatus
         };
         web.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { Type = "snapshot", State = state }, json));
     }
@@ -242,7 +244,28 @@ public sealed class OverlayWindow : Window
     }
     // Turning game mode on (hotkey, tray, button) closes Settings first; Settings had suspended it, so there is nothing to restore.
     private void ToggleGameMode() { if (settingsOpen) { suspendedGameMode = false; SetSettings(false); } native.SetGameMode(!native.GameMode); Publish(); }
-    private void ApplySettings() { preferences.Normalize(); native.Resize(300 * preferences.Scale, logicalHeight * preferences.Scale); saveTimer.Start(); Publish(); }
+    private void ApplySettings() { preferences.Normalize(); native.Resize(300 * preferences.Scale, logicalHeight * preferences.Scale); saveTimer.Start(); UpdateWaveform(); Publish(); }
+    // Captures Spotify's audio only while the waveform is on and a track plays (callers publish). Acting on changes only, a failure
+    // is retried at the next play or Waveform toggle. Frames go straight to the page, outside the snapshot.
+    private void UpdateWaveform()
+    {
+        var wanted = preferences.Waveform && playback.Playing && !disposed;
+        if (wanted == waveformWanted) return;
+        waveformWanted = wanted; capture?.Dispose(); capture = null; waveformStatus = "";
+        if (!wanted) return;
+        if (SpotifyAudioCapture.FindSpotify() is not int pid) { waveformStatus = "Spotify's audio isn't available"; return; }
+        SpotifyAudioCapture? started = null;
+        started = capture = new SpotifyAudioCapture(pid,
+            pcm => DispatcherQueue.TryEnqueue(() =>
+            {
+                if (ready && capture == started) web.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { Type = "audio", Rate = SpotifyAudioCapture.Rate, Pcm = pcm }, json));
+            }),
+            () => DispatcherQueue.TryEnqueue(() =>
+            {
+                if (capture != started) return;
+                capture = null; waveformStatus = "Couldn't read Spotify's audio"; Publish();
+            }));
+    }
     // Publish never saves, so reporting the failure cannot loop; after Closed, Publish is a no-op.
     private void Save() { saveTimer.Stop(); try { store.Save(preferences); } catch { status = "Settings could not be saved"; Publish(); } }
     // Open Settings suspends game mode (clicks must reach it) and lets the overlay take keyboard focus; closing restores both.
@@ -276,6 +299,8 @@ public sealed class OverlayWindow : Window
             case ("lyricsSize", double v, _, _): preferences.LyricsSize = v; return true;
             case ("lyricsOffset", double v, _, _): preferences.LyricsOffset = v; return true;
             case ("reducedMotion", _, bool on, _): preferences.ReducedMotion = on; return true;
+            case ("waveform", _, bool on, _): preferences.Waveform = on; return true;
+            case ("waveformStyle", _, _, "Bars" or "Wave" or "Strip"): preferences.WaveformStyle = value.GetString()!; return true;
             case ("theme", _, _, "Album" or "Dark" or "Light"): preferences.Theme = value.GetString()!; return true;
             default: return false;
         }
