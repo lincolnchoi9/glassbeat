@@ -86,7 +86,7 @@ final class SpotifyAudioTap: NSObject {
     private static func get<T>(_ object: AudioObjectID, _ selector: AudioObjectPropertySelector, _ value: inout T) -> OSStatus {
         var address = AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
         var size = UInt32(MemoryLayout<T>.size)
-        return AudioObjectGetPropertyData(object, &address, 0, nil, &size, &value)
+        return withUnsafeMutableBytes(of: &value) { AudioObjectGetPropertyData(object, &address, 0, nil, &size, $0.baseAddress!) }
     }
     // Core Audio returns CFStrings retained (+1).
     private static func string(_ object: AudioObjectID, _ selector: AudioObjectPropertySelector) -> String? {
