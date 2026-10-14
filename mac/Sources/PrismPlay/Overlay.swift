@@ -38,6 +38,8 @@ final class Overlay: NSObject {
     private var settingsOpen = false, suspendedGameMode = false, startup = false, gameMode = false
     private var ready = false, moving = false, seekRejected = false
     private var status = "Open Spotify to get started", hotkeyError = "", lyricsStatus = "", generalStatus = ""
+    private var waveformStatus = ""
+    private var waveformTap: AnyObject?     // SpotifyAudioTap (macOS 14.2+)
     private var logicalHeight = 156.0
     private var commandVersion = 0
     private var saveTimer: Timer?
@@ -220,6 +222,12 @@ final class Overlay: NSObject {
         case "theme":
             guard let theme = value as? String, ["Album", "Dark", "Light"].contains(theme) else { return false }
             prefs.theme = theme
+        case "waveform":
+            guard let on = flag(value) else { return false }
+            prefs.waveform = on
+        case "waveformStyle":
+            guard let style = value as? String, Preferences.waveformStyles.contains(style) else { return false }
+            prefs.waveformStyle = style
         default: return false
         }
         return true
@@ -235,11 +243,11 @@ final class Overlay: NSObject {
             "artwork": (playback.artwork as Any?) ?? NSNull(),
             "preferences": ["scale": prefs.scale, "opacity": prefs.opacity, "theme": prefs.theme, "corners": prefs.corners, "lyricsSize": prefs.lyricsSize,
                             "lyricsOffset": prefs.lyricsOffset, "reducedMotion": prefs.reducedMotion, "lyricsOpen": prefs.lyricsOpen, "hotkey": prefs.hotkey,
-                            "x": prefs.x, "y": prefs.y] as [String: Any],
+                            "x": prefs.x, "y": prefs.y, "waveform": prefs.waveform, "waveformStyle": prefs.waveformStyle] as [String: Any],
             "gameMode": gameMode, "moving": moving,
             "lyrics": ["lines": lyrics.lines.map { ["seconds": $0.seconds, "text": $0.text] as [String: Any] }, "plain": lyrics.plain, "status": lyrics.status] as [String: Any],
             "status": status, "seekRejected": seekRejected, "hotkeyError": hotkeyError, "settingsOpen": settingsOpen, "startup": startup,
-            "lyricsStatus": lyricsStatus, "generalStatus": generalStatus, "platform": "mac",
+            "lyricsStatus": lyricsStatus, "generalStatus": generalStatus, "waveformStatus": waveformStatus, "platform": "mac",
         ]
         guard let data = try? JSONSerialization.data(withJSONObject: ["type": "snapshot", "state": state]), let json = String(data: data, encoding: .utf8) else { return }
         web.evaluateJavaScript("window.__prismplay(\(json))")
@@ -259,7 +267,20 @@ final class Overlay: NSObject {
         }
         // Unlike Windows, a waiting state may change its message without a track change (e.g. Automation denied).
         if changed || state.track == nil { status = state.track == nil ? state.status : "" }
-        publish()
+        updateWaveform(); publish()
+    }
+
+    /// Captures Spotify's audio only while the waveform is on and Spotify is playing. A failed tap stays failed (and its status
+    /// shown) until the gate closes, so it is not retried on every playback update.
+    private func updateWaveform() {
+        guard #available(macOS 14.2, *) else { waveformStatus = prefs.waveform ? "Needs macOS 14.2 or later" : ""; return }
+        if prefs.waveform && playback.playing {
+            if waveformTap == nil {
+                waveformTap = SpotifyAudioTap(web: web) { [weak self] in self?.waveformStatus = "Couldn't read Spotify's audio"; self?.publish() }
+            }
+        } else if let tap = waveformTap as? SpotifyAudioTap {
+            tap.stop(); waveformTap = nil; waveformStatus = ""
+        }
     }
 
     private func cancelLyrics() { lyricsTask?.cancel(); lyricsGeneration += 1 }
@@ -321,7 +342,7 @@ final class Overlay: NSObject {
     // MARK: Settings, game mode, hotkey
 
     private static var startupEnabled: Bool { SMAppService.mainApp.status == .enabled }
-    private func applySettings() { prefs.normalize(); resize(300 * prefs.scale, logicalHeight * prefs.scale); scheduleSave(); publish() }
+    private func applySettings() { prefs.normalize(); resize(300 * prefs.scale, logicalHeight * prefs.scale); scheduleSave(); updateWaveform(); publish() }
     // Slider drags apply per tick; write the file once the value settles.
     private func scheduleSave() {
         saveTimer?.invalidate()
@@ -368,6 +389,7 @@ final class Overlay: NSObject {
     @objc private func quit() { NSApp.terminate(nil) }
     @objc private func terminating() {
         cancelLyrics(); dragTicker.stop(); springTicker.stop()
+        if #available(macOS 14.2, *) { (waveformTap as? SpotifyAudioTap)?.stop() }
         if let hotkeyRef { UnregisterEventHotKey(hotkeyRef) }
         save()
     }

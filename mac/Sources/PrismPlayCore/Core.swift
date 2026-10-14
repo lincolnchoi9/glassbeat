@@ -43,9 +43,12 @@ public struct Lyrics {
 public struct Preferences: Codable, Equatable {
     public var scale = 1.0, opacity = 0.64, theme = "Album", corners = 22.0, lyricsSize = 18.0, lyricsOffset = 0.0
     public var reducedMotion = false, lyricsOpen = false, hotkey = "G", x = 80, y = 80
+    public var waveform = false, waveformStyle = "Bars"
+    public static let waveformStyles = ["Bars", "Wave", "Strip"]
     enum CodingKeys: String, CodingKey {
         case scale = "Scale", opacity = "Opacity", theme = "Theme", corners = "Corners", lyricsSize = "LyricsSize", lyricsOffset = "LyricsOffset"
         case reducedMotion = "ReducedMotion", lyricsOpen = "LyricsOpen", hotkey = "Hotkey", x = "X", y = "Y"
+        case waveform = "Waveform", waveformStyle = "WaveformStyle"
     }
     public init() {}
     // Missing keys keep their defaults; a value of the wrong type fails the whole load (the store then uses defaults), like System.Text.Json.
@@ -56,18 +59,32 @@ public struct Preferences: Codable, Equatable {
         corners = try value(.corners, corners); lyricsSize = try value(.lyricsSize, lyricsSize); lyricsOffset = try value(.lyricsOffset, lyricsOffset)
         reducedMotion = try value(.reducedMotion, reducedMotion); lyricsOpen = try value(.lyricsOpen, lyricsOpen)
         hotkey = try value(.hotkey, hotkey); x = try value(.x, x); y = try value(.y, y)
+        waveform = try value(.waveform, waveform); waveformStyle = try value(.waveformStyle, waveformStyle)
     }
     public mutating func normalize() {
         scale = Self.clamp(scale, 0.75, 2, 1); opacity = Self.clamp(opacity, 0.15, 0.95, 0.64)
         corners = Self.clamp(corners, 0, 32, 22); lyricsSize = Self.clamp(lyricsSize, 12, 28, 18)
         lyricsOffset = Self.clamp(lyricsOffset, -10, 10, 0)
         if !["Album", "Dark", "Light"].contains(theme) { theme = "Album" }
+        if !Self.waveformStyles.contains(waveformStyle) { waveformStyle = "Bars" }
         if !Self.isHotkey(hotkey) { hotkey = "G" }
         hotkey = hotkey.uppercased()
     }
     /// One ASCII letter or digit.
     public static func isHotkey(_ key: String) -> Bool { key.utf8.count == 1 && key.first.map { $0.isLetter || $0.isNumber } == true }
     private static func clamp(_ value: Double, _ low: Double, _ high: Double, _ fallback: Double) -> Double { value.isFinite ? min(max(value, low), high) : fallback }
+}
+
+/// Host → overlay audio (`{type:'audio', rate, pcm}`, as on Windows): the most recent 1024 mono samples, zero-padded at the front,
+/// clamped to −1...1 (NaN → 0), as little-endian Int16, base64.
+public enum AudioFrame {
+    public static let count = 1024
+    public static func encode(mono: [Float]) -> String {
+        var samples = [Int16](repeating: 0, count: count)
+        let tail = mono.suffix(count), start = count - tail.count
+        for (i, s) in tail.enumerated() { samples[start + i] = Int16(((s.isNaN ? 0 : min(max(s, -1), 1)) * 32767).rounded()).littleEndian }
+        return samples.withUnsafeBytes { Data($0) }.base64EncodedString()
+    }
 }
 
 public struct PreferencesStore {

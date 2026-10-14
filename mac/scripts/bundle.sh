@@ -42,6 +42,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
   <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>
   <key>NSAppleEventsUsageDescription</key><string>PrismPlay shows and controls what's playing in Spotify.</string>
+  <key>NSAudioCaptureUsageDescription</key><string>PrismPlay reads Spotify's audio to draw the waveform. Nothing is recorded or sent.</string>
 </dict>
 </plist>
 EOF

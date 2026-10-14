@@ -310,6 +310,7 @@ The React refraction samples the overlay's own background. It does not capture/r
 - Window: non-activating `NSPanel` (key only while Settings is open), a continuous-corner container with an `NSVisualEffectView` and a fixed 300×480 (×scale) transparent `WKWebView`. Expand/collapse animates the panel height with `DragMath.spring`; the page never re-lays out. `X`/`Y` in settings.json are the top-left in points, measured down from the primary display's top.
 - Bridge: a document-start user script provides `window.chrome.webview` over `webkit.messageHandlers.prismplay`; the page is served from `prismplay://app/` (`WKURLSchemeHandler`), and other navigation is cancelled.
 - No Mac here: CI (`.github/workflows/mac.yml`, macos-14) is the compiler. Build errors and test failures become annotations readable from the public check-runs API. Everything that needs a real Mac (window, blur, hover, drag, hotkey, AppleScript, login item) is untested.
+- Waveform: `SpotifyAudioTap.swift` taps Spotify's audio processes (bundle ID prefix `com.spotify.client`, so helpers too) with an unmuted, private Core Audio process tap on a private aggregate device, and sends `{type:'audio', rate, pcm}` (`AudioFrame.encode` in Core.swift) ~30×/s while `waveform` is on and Spotify plays. Needs macOS 14.2 (older shows "Needs macOS 14.2 or later"); `NSAudioCaptureUsageDescription` in bundle.sh's Info.plist covers the permission prompt. Untested on real hardware.
 
 ## Local state and privacy
 

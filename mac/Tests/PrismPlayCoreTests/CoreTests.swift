@@ -43,6 +43,23 @@ final class CoreTests: XCTestCase {
         let store = PreferencesStore(folder: folder)
         try store.save(decoded)
         XCTAssertEqual(store.load().hotkey, "K", "Saved preferences load back normalized")
+        XCTAssert(!decoded.waveform && decoded.waveformStyle == "Bars", "Missing waveform keys keep their defaults")
+        var styled = try JSONDecoder().decode(Preferences.self, from: Data(#"{"Waveform":true,"WaveformStyle":"Wave"}"#.utf8))
+        XCTAssert(styled.waveform && styled.waveformStyle == "Wave", "Waveform keys use the Windows names")
+        styled.waveformStyle = "Spiral"; styled.normalize()
+        XCTAssertEqual(styled.waveformStyle, "Bars", "Unknown waveform style recovers to Bars")
+    }
+
+    func testAudioFrame() {
+        func decode(_ text: String) -> [Int16] {
+            let b = [UInt8](Data(base64Encoded: text)!)
+            return stride(from: 0, to: b.count, by: 2).map { Int16(bitPattern: UInt16(b[$0]) | UInt16(b[$0 + 1]) << 8) }
+        }
+        let short = decode(AudioFrame.encode(mono: [0.5, -2, 1, .nan]))
+        XCTAssertEqual(short.count, 1024, "Always 1024 samples")
+        XCTAssert(short[..<1020].allSatisfy { $0 == 0 } && Array(short[1020...]) == [16384, -32767, 32767, 0], "Zero-padded at the front, clamped, little-endian")
+        let long = decode(AudioFrame.encode(mono: [Float](repeating: 1, count: 500) + [Float](repeating: -0.25, count: 1024)))
+        XCTAssert(long.count == 1024 && long.allSatisfy { $0 == -8192 }, "Keeps only the most recent 1024 samples")
     }
 
     func testLyricsProvider() async throws {
