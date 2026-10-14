@@ -5,7 +5,7 @@ Workspace: `C:\Users\linco\OneDrive\Documents\ChatGPT\spot overlay`
 
 ## Current state
 
-PrismPlay is a working Windows 11 x64 Spotify overlay, version 0.4.2. The native C# host detects local Spotify media sessions; a bundled React interface renders the overlay in WebView2. Automatic lyrics are implemented and have been observed working with a real Spotify track. The latest build and self-contained publish succeeded.
+PrismPlay is a working Windows 11 x64 Spotify overlay, version 0.4.3. The native C# host detects local Spotify media sessions; a bundled React interface renders the overlay in WebView2. Automatic lyrics are implemented and have been observed working with a real Spotify track. The latest build and self-contained publish succeeded.
 
 Latest deliverable: `PrismPlay-0.4.0-win-x64.zip`, on E: only (location, size, and SHA-256 are recorded in the workspace copy of this file, under "0.4.0 PrismPlay rebrand"). The 0.2.0 and 0.3.0–0.3.5 packages are kept under their original names. Extract the whole archive; run PrismPlay.exe with its Web folder and runtime files alongside it. Edge WebView2 Runtime is required. The executable is unsigned. Updates are manual.
 
@@ -25,12 +25,14 @@ Git: `origin` is the project's GitHub repository; `main` holds the 0.3.5 and 0.4
 
 ## Most recent changes
 
-### Waveform (unreleased, branch pending)
+### 0.4.3 audio-reactive waveform
 
-- Appearance â€º Waveform (off by default) draws Spotify's live audio right of the title: Bars, Wave or Strip. Prefs `Waveform`/`WaveformStyle` ("Bars" | "Wave" | "Strip", else "Bars"); snapshot `waveformStatus` ('' when fine or off). Hidden while Reduced motion is on or the shortcut chip shows.
-- Contract (shared with macOS): host â†’ web `{ type: 'audio', rate, pcm }` about 30/s only while capturing; `pcm` is base64 of the newest 1024 mono little-endian Int16 samples (`AudioFrame.Encode` in `Core.cs`). The page keeps the frame outside React state and draws a canvas on rAF, resting (loop stopped) 250 ms after frames stop.
+- Appearance › Waveform (off by default) draws Spotify's live audio right of the title: Bars, Wave or Strip. Prefs `Waveform`/`WaveformStyle` ("Bars" | "Wave" | "Strip", else "Bars"); snapshot `waveformStatus` ('' when fine or off). Hidden while Reduced motion is on or the shortcut chip shows.
+- Contract (shared with macOS): host → web `{ type: 'audio', rate, pcm }` about 30/s only while capturing; `pcm` is base64 of the newest 1024 mono little-endian Int16 samples (`AudioFrame.Encode` in `Core.cs`). The page keeps the frame outside React state and draws a canvas on rAF, resting (loop stopped) 250 ms after frames stop.
 - Windows: `SpotifyAudioCapture.cs`, WASAPI process loopback (`[ComImport]`, no packages) on the earliest `Spotify` process tree; 44.1 kHz 16-bit stereo, event-driven on a background MTA thread. `OverlayWindow.UpdateWaveform` runs it while Waveform is on and a track plays; failures set `waveformStatus` and retry on the next play or Waveform toggle.
 - Verified: C# Release build 0/0, runner 34/34, `npm test` 5/5, Playwright 23/23. A throwaway harness (not kept) activated loopback on the running Spotify tree, ~30 frames/s, none after Dispose; Spotify was paused, so real-audio levels and the app itself are unverified (no launch).
+- macOS: the Core Audio process tap ships in the same release; see the Waveform note under "macOS port".
+- Clean publish (tests not rerun; only version strings changed since): `<BuildRoot>\artifacts\PrismPlay-0.4.3-win-x64.zip`, 85,875,808 bytes, SHA-256 `63143F2510EC045EE787DD127CC5C4DB5288D8DE6BF87FA9E55C8C5B5758B3D3`, 512 files; `PrismPlay.exe` reports 0.4.3 (no launch; the docs inside the ZIP predate this line).
 
 ### 0.4.2 karaoke lyrics
 
@@ -317,7 +319,7 @@ The React refraction samples the overlay's own background. It does not capture/r
 - The React UI is shared. The host adds `platform: "mac"` to the snapshot; `main.jsx`/`style.css` key a few labels and the `[data-platform="mac"]` stage/tint rules on it. Windows sends no field, so it renders exactly as before.
 - Window: non-activating `NSPanel` (key only while Settings is open), a continuous-corner container with an `NSVisualEffectView` and a fixed 300×480 (×scale) transparent `WKWebView`. Expand/collapse animates the panel height with `DragMath.spring`; the page never re-lays out. `X`/`Y` in settings.json are the top-left in points, measured down from the primary display's top.
 - Bridge: a document-start user script provides `window.chrome.webview` over `webkit.messageHandlers.prismplay`; the page is served from `prismplay://app/` (`WKURLSchemeHandler`), and other navigation is cancelled.
-- No Mac here: CI (`.github/workflows/mac.yml`, macos-14) is the compiler. Build errors and test failures become annotations readable from the public check-runs API. Everything that needs a real Mac (window, blur, hover, drag, hotkey, AppleScript, login item) is untested.
+- No Mac here: CI (`.github/workflows/mac.yml`, macos-14) is the compiler. Build errors and test failures become annotations. The repo is private, so read results with the authenticated `gh run view` / `gh run watch` (`gh` is installed). Everything that needs a real Mac (window, blur, hover, drag, hotkey, AppleScript, login item) is untested.
 - Waveform: `SpotifyAudioTap.swift` taps Spotify's audio processes (bundle ID prefix `com.spotify.client`, so helpers too) with an unmuted, private Core Audio process tap on a private aggregate device, and sends `{type:'audio', rate, pcm}` (`AudioFrame.encode` in Core.swift) ~30×/s while `waveform` is on and Spotify plays. Needs macOS 14.2 (older shows "Needs macOS 14.2 or later"); `NSAudioCaptureUsageDescription` in bundle.sh's Info.plist covers the permission prompt. Untested on real hardware.
 
 ## Local state and privacy
