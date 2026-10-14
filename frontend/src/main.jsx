@@ -2,7 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, memo 
 import { createRoot } from 'react-dom/client';
 import LiquidGlass from 'liquid-glass-react';
 import { Play, Pause, SkipBack, SkipForward, Captions, Maximize2, Gamepad2, Settings2, Music2, RefreshCw } from 'lucide-react';
-import { pointerToTime, positionAt, formatTime, activeLyric, clamp } from './model';
+import { pointerToTime, positionAt, formatTime, activeLyric, lyricProgress, clamp } from './model';
 import { version } from '../package.json';
 import './style.css';
 
@@ -78,15 +78,23 @@ const Seek = memo(function Seek({ state, onScrub }) {
 
 const Lyrics = memo(function Lyrics({ state }) {
   const { lines, plain, status } = state.lyrics;
-  const getActive = () => activeLyric(lines, positionAt(state) + state.preferences.lyricsOffset);
-  const [active, setActive] = useState(getActive);
+  const reduced = state.preferences.reducedMotion || osReducedMotion.matches;
+  const at = () => positionAt(state) + state.preferences.lyricsOffset;
+  const [active, setActive] = useState(() => activeLyric(lines, at()));
   const [offset, setOffset] = useState(0);
   const viewport = useRef(null), list = useRef(null);
-  useEffect(() => {
-    setActive(getActive());
-    if (!state.playing || !lines.length) return;
-    const timer = setInterval(() => setActive(getActive()), 80);
-    return () => clearInterval(timer);
+  // Each frame while playing: the current line, and --p (letters revealed, read by style.css) written straight onto its <p>.
+  // A layout effect, so --p is in place before the first paint of a newly current line.
+  useLayoutEffect(() => {
+    let frame;
+    const update = () => {
+      const position = at(), index = activeLyric(lines, position);
+      setActive(index);
+      if (!reduced) list.current?.children[index]?.style.setProperty('--p', lyricProgress(lines, index, position, state.track?.duration));
+      if (state.playing && lines.length) frame = requestAnimationFrame(update);
+    };
+    update();
+    return () => cancelAnimationFrame(frame);
   }, [state, lines]);
   useLayoutEffect(() => {
     if (!viewport.current || !list.current) return;
@@ -102,7 +110,8 @@ const Lyrics = memo(function Lyrics({ state }) {
   return <section className="lyrics" style={{ fontSize: state.preferences.lyricsSize }} aria-label="Lyrics">
     {!lines.length && <div className="lyrics-heading"><div className="lyrics-label">{plain ? 'Unsynced' : status.replace(/ · LRCLIB/g, '')}</div>{!plain && !status.includes('Looking') && <Button label="Retry lyrics" icon={RefreshCw} onClick={() => send('retryLyrics')}/>}</div>}
     {lines.length ? <div className="lyrics-viewport" ref={viewport}><div className="lyric-lines" ref={list} style={{ transform: `translate3d(0, ${offset}px, 0)` }}>
-      {lines.map((line, i) => <p key={`${line.seconds}-${i}`} data-active={i === active} className={i === active ? 'current-line' : ''}>{line.text || '♪'}</p>)}
+      {lines.map((line, i) => <p key={`${line.seconds}-${i}`} data-active={i === active} className={i === active ? 'current-line' : ''}>
+        {i === active && !reduced ? Array.from(line.text || '♪', (letter, n) => <span key={n} style={{ '--i': n }}>{letter}</span>) : line.text || '♪'}</p>)}
     </div></div> : <div className="plain-lyrics">{plain || (status.includes('Looking') ? 'Finding your lyrics…' : status.startsWith('Instrumental') ? '♪' : 'Lyrics aren’t available for this track yet.')}</div>}
   </section>;
 });

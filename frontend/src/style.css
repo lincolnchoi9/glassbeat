@@ -63,7 +63,13 @@
 .lyrics-viewport { height: 189px; overflow: hidden; position: relative; mask-image: linear-gradient(transparent, black 18%, black 82%, transparent); }
 .lyric-lines { position: relative; will-change: transform; transition: transform 420ms cubic-bezier(.22,.75,.2,1); }
 .lyric-lines p { opacity: .32; margin: 0; padding: 10px 0; line-height: 1.4; font-weight: 600; transform: scale(.96); transform-origin: left center; transition: opacity 280ms ease, transform 350ms var(--ease); overflow-wrap: anywhere; }
-.lyric-lines .current-line { opacity: 1; transform: scale(1); }
+/* The current line snaps to opacity 1 (no fade in, which would dim its unlit letters further) and its letters light left to right:
+   --p (letters revealed, set per frame by Lyrics) over a 3-letter soft edge (EDGE in model.js), from the dim-line .32 to 1.
+   --g glows the letters 1-2 past the edge, fading out by 5; knobs: .45em blur, 60% peak strength (no glow in Light). */
+.lyric-lines .current-line { opacity: 1; transform: scale(1); transition: transform 350ms var(--ease); }
+.lyric-lines .current-line span { opacity: clamp(.32, calc(.32 + (var(--p, 0) - var(--i)) * .68 / 3), 1);
+  --g: clamp(0, min(var(--p, 0) - var(--i), (5 - (var(--p, 0) - var(--i))) / 3), 1); text-shadow: 0 0 .45em color-mix(in srgb, currentColor calc(var(--g) * 60%), transparent); }
+[data-theme="light"] .lyric-lines .current-line span { text-shadow: none; }
 .plain-lyrics { white-space: pre-line; line-height: 1.5; margin: 12px 0 0; max-height: 150px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #ffffff30 transparent; opacity: .8; }
 /* Settings: inset groups on the glass, iOS style. Colours derive from --ink, so the Light tint stays legible. */
 .settings { height: 280px; display: flex; flex-direction: column; padding: 10px 12px 0; }
